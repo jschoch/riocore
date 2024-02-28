@@ -11,7 +11,7 @@ For G96 you need a spindle encoder and to also configure velocity feedback via `
 example: 
 
 ```json
-indexenable": {
+                        "indexenable": {
                             "net": "spindle.0.index-enable"
                         },
                         "position": {
