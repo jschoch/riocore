@@ -1,10 +1,14 @@
 ## Developer Documentation
 
+### Considerations
 
+Because there are so many interrelated components and dependencies on LCNC development cycles can be very slow.
+
+You must get into the habbit of re-generating everytime you update a plugin or it's verilog.
 
 # Definitions
 
-Module:
+Module: TODO: Oliver?
 Plugin:
 Signal:
 Net: 
@@ -22,7 +26,10 @@ If you want to modify a plugin and add a raw signal for an input you first need 
                 "size": 1,
                 "direction": "input",
             },
-            
+            "raw_a": {
+                "size": 1,
+                "direction": "input",
+            },
 
         }
         self.SIGNALS = {

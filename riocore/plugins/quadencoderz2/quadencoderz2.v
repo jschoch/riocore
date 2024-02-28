@@ -13,9 +13,8 @@ module quadencoderz2
          output reg indexout = 0,
          output reg idx = 0,
          output reg raw_a = 0,
-
          output reg raw_b = 0,
-
+         output reg[15:0] revs = 0,
          output signed [BITS-1:0] position
      );
     reg [2:0] quadA_delayed = 0;
@@ -33,6 +32,12 @@ module quadencoderz2
         idx <= z;
         raw_a <= a;
         raw_b <= b;
+        if(quadZ_delayed == 1 && count_direction && count_enable) begin
+            // TODO: add direction bit
+           revs <= revs +1; 
+        end else if(quadZ_delayed == 1 && !count_direction && count_enable) begin
+            revs <= revs - 1;
+        end
         if (indexenable == 1 && indexout == 1 && quadZ_delayed == 1) begin
             indexout <= 0;
             count <= 0;

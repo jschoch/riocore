@@ -63,6 +63,10 @@ class Plugin(PluginBase):
                 "size": 1,
                 "direction": "input",
             },
+            "revs": {
+               "size": 16,
+               "direction": "input", 
+            },
 
 
 
@@ -84,6 +88,9 @@ class Plugin(PluginBase):
             "raw_b":{
                 "direction": "input",
                 "bool": True,
+            },
+            "revs": {
+                "direction": "input"
             },
             
 
