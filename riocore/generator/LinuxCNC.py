@@ -2175,6 +2175,37 @@ class LinuxCNC:
                                                 output.append(f"    data->{source} = avg_value;")
                                     output.append("}")
                                     output.append("")
+                                if signal_filter.get("type") == "alpha_beta":
+                                    blob = """
+typedef struct {
+    float position;
+    float velocity;
+} FilterState;
+
+void alpha_beta_filter(FilterState *state, float encoder_delta, float alpha, float beta, float duration, uint32_t ppr) {
+    if (duration <= 0.0f) {
+        return; // Handle invalid duration
+    }
+
+    // Convert encoder delta to revolutions
+    float delta_revolutions = (float)encoder_delta / ppr;
+
+    // Prediction step
+    float predicted_position = state->position + state->velocity * duration;
+    float predicted_velocity = state->velocity;
+
+    // Innovation (residual)
+    float residual_position = (state->position + delta_revolutions) - predicted_position;
+
+    // Update step
+    state->position = predicted_position + alpha * residual_position;
+    state->velocity = predicted_velocity + (beta / duration) * residual_position;
+}
+                              
+                                            """
+                                    output.append(blob)
+
+
 
                         output.append(f"void convert_{varname.lower()}(data_t *data) {{")
                         for data_name, data_config in plugin_instance.interface_data().items():
