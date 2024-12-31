@@ -1,5 +1,4 @@
 import os
-from struct import *
 
 from riocore.checksums import crc8, crc16
 from riocore.plugins import PluginBase
@@ -8,6 +7,10 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "uartbridge"
+        self.INFO = "uart bridge - experimental - python only"
+        self.KEYWORDS = "serial uart"
+        self.DESCRIPTION = "uart bridge to send and receive custom frames via uart port"
+        self.ORIGIN = "https://github.com/ChandulaNethmal/Implemet-a-UART-link-on-FPGA-with-verilog/tree/master"
         self.VERILOGS = ["uartbridge.v", "uart_baud.v", "uart_rx.v", "uart_tx.v"]
         self.PINDEFAULTS = {
             "tx": {
@@ -47,12 +50,12 @@ class Plugin(PluginBase):
                 "description": "max tx buffer size",
             },
             "tx_frame": {
-                "default": "",
+                "default": "tx1:u8|tx2:u8",
                 "type": str,
                 "description": "tx frame format",
             },
             "rx_frame": {
-                "default": "",
+                "default": "rx1:u8|rx2:u8",
                 "type": str,
                 "description": "rx frame format",
             },
@@ -61,8 +64,7 @@ class Plugin(PluginBase):
         self.TYPE = "frameio"
         self.DYNAMIC_SIGNALS = True
         self.TIMEOUT = 1000.0
-        self.INFO = "uart bridge"
-        self.DESCRIPTION = ""
+        self.DELAY = 0.0
 
         self.rx_buffersize = 3 * 8
         self.tx_buffersize = 2 * 8
@@ -196,18 +198,13 @@ class Plugin(PluginBase):
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
-
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
         instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
-
         baud = int(self.plugin_setup.get("baud", self.OPTIONS["baud"]["default"]))
         instance_parameter["RX_BUFFERSIZE"] = self.plugin_setup.get("rx_buffersize", self.OPTIONS["rx_buffersize"]["default"])
         instance_parameter["TX_BUFFERSIZE"] = self.plugin_setup.get("tx_buffersize", self.OPTIONS["tx_buffersize"]["default"])
         instance_parameter["ClkFrequency"] = self.system_setup["speed"]
         instance_parameter["Baud"] = baud
-
         self.arduino_example()
         return instances
 
@@ -251,7 +248,6 @@ class Plugin(PluginBase):
                             value = 0
                             signal_size = signal_setup["signal_size"]
                             signal_bfmt = signal_setup["signal_bfmt"]
-                            signal_signed = signal_setup["signal_signed"]
                             bytesize = signal_size // 8
                             if signal_bfmt == "lsb":
                                 for byte in range(0, bytesize):
@@ -269,7 +265,6 @@ class Plugin(PluginBase):
                             value = 0
                             signal_size = signal_setup["signal_size"]
                             signal_bfmt = signal_setup["signal_bfmt"]
-                            signal_signed = signal_setup["signal_signed"]
                             bytesize = signal_size // 8
                             if signal_bfmt == "lsb":
                                 for byte in range(0, bytesize):
@@ -307,7 +302,6 @@ class Plugin(PluginBase):
                 value = signal_setup["value"]
                 signal_size = signal_setup["signal_size"]
                 signal_bfmt = signal_setup["signal_bfmt"]
-                signal_signed = signal_setup["signal_signed"]
                 bytesize = signal_size // 8
                 if signal_bfmt == "lsb":
                     for byte in range(0, bytesize):
@@ -363,11 +357,8 @@ class Plugin(PluginBase):
             if signal_setup["direction"] == "output":
                 if signal_name != "rx_csum" and signal_name != "tx_csum":
                     signal_size = signal_setup["signal_size"]
-                    signal_bfmt = signal_setup["signal_bfmt"]
-                    signal_signed = signal_setup["signal_signed"]
-                    bytesize = signal_size // 8
                     output.append(f"    uint{signal_size}_t {signal_name};")
-        output.append(f"    uint8_t csum;")
+        output.append("    uint8_t csum;")
         output.append("};")
         output.append("")
         output.append("typedef struct tx_data_t {")
@@ -375,11 +366,8 @@ class Plugin(PluginBase):
             if signal_setup["direction"] == "input":
                 if signal_name != "rx_csum" and signal_name != "tx_csum":
                     signal_size = signal_setup["signal_size"]
-                    signal_bfmt = signal_setup["signal_bfmt"]
-                    signal_signed = signal_setup["signal_signed"]
-                    bytesize = signal_size // 8
                     output.append(f"    uint{signal_size}_t {signal_name};")
-        output.append(f"    uint8_t csum;")
+        output.append("    uint8_t csum;")
         output.append("};")
         output.append("")
         output.append("typedef union rx_frame_t {")
@@ -418,9 +406,6 @@ class Plugin(PluginBase):
             if signal_setup["direction"] == "output":
                 if signal_name != "rx_csum" and signal_name != "tx_csum":
                     signal_size = signal_setup["signal_size"]
-                    signal_bfmt = signal_setup["signal_bfmt"]
-                    signal_signed = signal_setup["signal_signed"]
-                    bytesize = signal_size // 8
                     output.append(f'        sprintf(tmp_str, "{signal_name:10} %9d", rx_frame.data.{signal_name});')
                     output.append(f"        lcd.setCursor(0, {line_n});")
                     output.append("        lcd.print(tmp_str);")
@@ -438,9 +423,6 @@ class Plugin(PluginBase):
             if signal_setup["direction"] == "input":
                 if signal_name != "rx_csum" and signal_name != "tx_csum":
                     signal_size = signal_setup["signal_size"]
-                    signal_bfmt = signal_setup["signal_bfmt"]
-                    signal_signed = signal_setup["signal_signed"]
-                    bytesize = signal_size // 8
                     output.append(f"    tx_frame.data.{signal_name} = {value_n + 1};")
                     value_n += 1
         output.append("    crc.restart();")
@@ -451,8 +433,6 @@ class Plugin(PluginBase):
         output.append("}")
         output.append("")
 
-        # print("\n".join(output))
-
         folder = f"{self.system_setup['output_path']}/arduino_example_{self.instances_name}"
-        os.system(f"mkdir -p {folder}/src/")
+        os.makedirs(f"{folder}/src/", exist_ok=True)
         open(f"{folder}/src/main.ino", "w").write("\n".join(output))

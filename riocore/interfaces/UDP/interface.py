@@ -1,3 +1,6 @@
+import ipaddress
+
+
 class Interface:
     def __init__(self, cstr):
         (self.NET_IP, self.NET_PORT) = cstr.split(":")
@@ -16,22 +19,29 @@ class Interface:
         try:
             self.socket.settimeout(0.2)
             self.socket.recvfrom(100000)
-        except:
-            pass
+        except Exception as err:
+            print(f"WARNING: can not set timeouts: {err}")
 
     def transfare(self, data):
         self.socket.sendto(bytes(data), (self.NET_IP, int(self.NET_PORT)))
         self.socket.settimeout(0.2)
-        msgFromServer = self.socket.recvfrom(len(data) * 4)
-        if len(msgFromServer[0]) == len(data):
-            rec = list(msgFromServer[0])
-        else:
-            print(f"{self.pkg_out}/{self.pkg_in} WRONG DATASIZE: {len(msgFromServer[0])} / {len(data)}")
-            rec = list(msgFromServer[0])
+        try:
+            msgFromServer = self.socket.recvfrom(len(data) * 4)
+            if len(msgFromServer[0]) == len(data):
+                rec = list(msgFromServer[0])
+            else:
+                print(f"{self.pkg_out}/{self.pkg_in} WRONG DATASIZE: {len(msgFromServer[0])} / {len(data)}")
+                rec = list(msgFromServer[0])
+        except TimeoutError:
+            print("Network TimeoutError")
+            rec = []
         return rec
 
     @classmethod
     def check(cls, cstr):
-        if cstr.startswith("192."):
+        try:
+            addr, port = cstr.split(":")
+            ipaddress.ip_address(addr)
             return True
-        return False
+        except ValueError:
+            return False

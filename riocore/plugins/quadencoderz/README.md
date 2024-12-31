@@ -1,7 +1,12 @@
 # quadencoderz
+**quadencoder with index pin**
+
+usable as spindle-encoder for rigid tapping and thread cutting
+
+Keywords: feedback encoder rotary linear glassscale  index
 
 
-quadencoder with index pin
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,29 +27,28 @@ quadencoder with index pin
 ```
 
 ## Pins:
+*FPGA-pins*
 ### a:
 
  * direction: input
- * pullup: False
 
 ### b:
 
  * direction: input
- * pullup: False
 
 ### z:
 index pin
 
  * direction: input
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### quad_type:
 encoder type
 
  * type: int
- * min: 1
+ * min: 0
  * max: 4
  * default: 2
 
@@ -52,16 +56,11 @@ encoder type
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### indexenable:
 
  * type: bit
@@ -92,6 +91,7 @@ calculates revolutions per minute
 
 
 ## Interfaces:
+*transport layer*
 ### indexenable:
 
  * size: 1 bit
@@ -114,7 +114,6 @@ calculates revolutions per minute
     "type": "quadencoderz",
     "quad_type": 2,
     "name": "",
-    "net": "",
     "pins": {
         "a": {
             "pin": "0",
@@ -204,4 +203,4 @@ calculates revolutions per minute
 ```
 
 ## Verilogs:
- * quadencoderz.v
+ * [quadencoderz.v](quadencoderz.v)

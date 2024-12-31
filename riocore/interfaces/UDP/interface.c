@@ -7,7 +7,7 @@
 #define SRC_PORT 2390
 #define SEND_TIMEOUT_US 10
 #define RECV_TIMEOUT_US 10
-#define READ_PCK_DELAY_NS 10000
+#define READ_PCK_DELAY_NS 1000
 
 static int udpSocket;
 static int errCount;
@@ -89,16 +89,16 @@ int udp_trx(uint8_t *txBuffer, uint8_t *rxBuffer, uint16_t size) {
         }
         t2 = rtapi_get_time();
     }
-    while ((ret < 0) && ((t2 - t1) < 20*1000*1000));
+    while ((ret < 0) && ((t2 - t1) < 2*1000*1000));
 
     if (ret > 0) {
         errCount = 0;
         if (ret == BUFFER_SIZE) {
             memcpy(rxBuffer, rxBufferTmp, BUFFER_SIZE);
         } else {
-            rtapi_print("wronng size = %d\n", ret);
+            rtapi_print("wrong size = %d\n", ret);
             for (i = 0; i < ret; i++) {
-                rtapi_print("%d ",rxBuffer[i]);
+                rtapi_print("%d ", rxBufferTmp[i]);
             }
             rtapi_print("\n");
         }
@@ -109,14 +109,11 @@ int udp_trx(uint8_t *txBuffer, uint8_t *rxBuffer, uint16_t size) {
         }
         printf("\n");
         */
-
-
-
     } else {
         errCount++;
-        rtapi_print("Ethernet ERROR: N = %d (ret: %d)\n", errCount, ret);
+        rtapi_print("Ethernet TIMEOUT: N = %d (ret: %d)\n", errCount, ret);
     }
 
-    return 1;
+    return ret;
 }
 

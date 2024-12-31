@@ -1,33 +1,145 @@
-from PyQt5 import QtGui, QtSvg
-from PyQt5.QtCore import QDateTime, QSize, Qt, QTimer
-from PyQt5.QtGui import QColor, QFont, QStandardItem, QStandardItemModel
+import os
+import json
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
-    QAbstractItemView,
-    QApplication,
-    QCheckBox,
     QComboBox,
     QDialog,
+    QCheckBox,
     QDialogButtonBox,
     QDoubleSpinBox,
-    QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidget,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
-    QScrollArea,
-    QSlider,
     QSpinBox,
     QTableWidget,
     QTableWidgetItem,
-    QTabWidget,
-    QTreeView,
     QVBoxLayout,
-    QWidget,
 )
+
+
+DEVICE_TEMPLATES = {
+    "NT18B07": {
+        "image": "NT18B07.jpg",
+        "info": "7x Temperature Input (NTC)",
+        "comment": "",
+        "setup": {
+            "temp7": {"address": 18, "type": 3, "register": 0, "values": 2, "scale": 0.1, "unit": "\u00b0C", "error_values": "", "format": "0.1f", "timeout": 100, "delay": 60, "direction": "input"},
+        },
+    },
+    "DDS519MR": {
+        "image": "DDS519MR.jpg",
+        "info": "Energie-Meter",
+        "comment": "needs to change serial setup (Parity: even -> none)",
+        "setup": {
+            "voltage": {
+                "address": 16,
+                "type": 4,
+                "register": 0,
+                "is_float": True,
+                "values": 1,
+                "scale": 1.0,
+                "unit": "V",
+                "error_values": "",
+                "format": "0.1f",
+                "timeout": 100,
+                "delay": 60,
+                "direction": "input",
+            },
+            "current": {
+                "address": 16,
+                "type": 4,
+                "register": 8,
+                "is_float": True,
+                "values": 1,
+                "scale": 1.0,
+                "unit": "A",
+                "error_values": "",
+                "format": "0.2f",
+                "timeout": 100,
+                "delay": 60,
+                "direction": "input",
+            },
+            "power": {
+                "address": 16,
+                "type": 4,
+                "register": 18,
+                "is_float": True,
+                "values": 1,
+                "scale": 1.0,
+                "unit": "W",
+                "error_values": "",
+                "format": "0.1f",
+                "timeout": 100,
+                "delay": 60,
+                "direction": "input",
+            },
+            "power_factor": {
+                "address": 16,
+                "type": 4,
+                "register": 42,
+                "is_float": True,
+                "values": 1,
+                "scale": 1.0,
+                "unit": "Cos",
+                "error_values": "",
+                "format": "0.2f",
+                "timeout": 100,
+                "delay": 60,
+                "direction": "input",
+            },
+            "freq": {
+                "address": 16,
+                "type": 4,
+                "register": 54,
+                "is_float": True,
+                "values": 1,
+                "scale": 1.0,
+                "unit": "Hz",
+                "error_values": "",
+                "format": "0.1f",
+                "timeout": 100,
+                "delay": 60,
+                "direction": "input",
+            },
+            "power_total": {
+                "address": 16,
+                "type": 4,
+                "register": 256,
+                "is_float": True,
+                "values": 1,
+                "scale": 1.0,
+                "unit": "kWh",
+                "error_values": "",
+                "format": "0.1f",
+                "timeout": 100,
+                "delay": 60,
+                "direction": "input",
+            },
+        },
+    },
+    "EBYTE MA01-AXCX4020": {
+        "image": "MA01-AXCX4020.jpg",
+        "info": "4x Digital In / 2x Digital Out (Relais)",
+        "comment": "",
+        "setup": {
+            "do2": {"address": 11, "type": 15, "register": 0, "values": 2, "scale": 1.0, "unit": "", "error_values": "0 0", "format": "d", "timeout": 100, "delay": 60, "direction": "output"},
+            "di4": {"address": 11, "type": 2, "register": 0, "values": 4, "scale": 1.0, "unit": "", "error_values": "", "format": "d", "timeout": 100, "delay": 60, "direction": "input"},
+        },
+    },
+    "EBYTE MA01-XACX0440": {
+        "image": "MA01-XACX0440.jpg",
+        "info": "4x Analog-In (0-20mA) / 4x Digital-Out (Relais)",
+        "comment": "",
+        "setup": {
+            "do4": {"address": 32, "type": 15, "register": 0, "values": 4, "scale": 1.0, "unit": "", "error_values": "", "format": "d", "timeout": 100, "delay": 60, "direction": "output"},
+            "ain": {"address": 32, "type": 4, "register": 0, "values": 4, "delay": 100, "scale": 0.0061, "unit": "mA", "format": "04.1f", "direction": "input"},
+        },
+    },
+}
 
 
 class config:
@@ -81,6 +193,12 @@ class config:
                 "min": 1,
                 "max": 16,
                 "default": 1,
+                "on_special": False,
+            },
+            "is_float": {
+                "description": "data format is float (4byte)",
+                "type": bool,
+                "default": False,
                 "on_special": False,
             },
             "scale": {
@@ -138,9 +256,11 @@ class config:
                 for n in range(0, data["widget"].count()):
                     if data["widget"].itemText(n).startswith(f"{value} "):
                         data["widget"].setCurrentIndex(n)
-            elif data["type"] == int:
+            elif data["type"] is bool:
+                data["widget"].setChecked(value)
+            elif data["type"] is int:
                 data["widget"].setValue(value)
-            elif data["type"] == float:
+            elif data["type"] is float:
                 data["widget"].setValue(value)
             else:
                 data["widget"].setText(str(value))
@@ -165,9 +285,11 @@ class config:
                 value = data["widget"].currentText().split()[0]
                 if value.isnumeric():
                     value = int(value)
-            elif data["type"] == int:
+            elif data["type"] is bool:
+                value = data["widget"].isChecked()
+            elif data["type"] is int:
                 value = data["widget"].value()
-            elif data["type"] == float:
+            elif data["type"] is float:
                 value = data["widget"].value()
             else:
                 value = data["widget"].text()
@@ -207,9 +329,11 @@ class config:
                 for n in range(0, data["widget"].count()):
                     if data["widget"].itemText(n).startswith(f"{value} "):
                         data["widget"].setCurrentIndex(n)
-            elif data["type"] == int:
+            elif data["type"] is bool:
+                data["widget"].setChecked(value)
+            elif data["type"] is int:
                 data["widget"].setValue(value)
-            elif data["type"] == float:
+            elif data["type"] is float:
                 data["widget"].setValue(value)
             else:
                 data["widget"].setText(str(value))
@@ -229,6 +353,88 @@ class config:
                 data["widget"].setEnabled(False)
             else:
                 data["widget"].setEnabled(True)
+
+    def select_template(self):
+        def change(row, column):
+            selected = table.item(row, 0).text()
+            device_data = DEVICE_TEMPLATES[selected]
+            image_name = device_data.get("image")
+            if image_name:
+                image_file = f"{os.path.dirname(__file__)}/images/{image_name}"
+                pixmap = QPixmap(image_file)
+                image.setPixmap(pixmap.scaled(200, 200, Qt.KeepAspectRatio))
+            template_name.setText(selected)
+            info.setText(device_data["info"])
+            description_text = f"{device_data['comment']}\n\n{json.dumps(device_data['setup'], indent=4)}"
+            description.clear()
+            description.insertPlainText(description_text)
+
+        infotext = ""
+        descriptiontext = ""
+
+        dialog = QDialog()
+        dialog.setWindowTitle("select Template")
+        dialog.setFixedWidth(800)
+        dialog.setFixedHeight(600)
+        if self.styleSheet:
+            dialog.setStyleSheet(self.styleSheet)
+
+        dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
+        dialog.buttonBox.accepted.connect(dialog.accept)
+        dialog.layout = QVBoxLayout()
+        hlayout = QHBoxLayout()
+        vlayout_left = QVBoxLayout()
+
+        message = QLabel("Template-Name:")
+        vlayout_left.addWidget(message)
+
+        table = QTableWidget()
+        table.setColumnCount(1)
+        table.setHorizontalHeaderItem(0, QTableWidgetItem("Templates"))
+
+        table.setRowCount(len(DEVICE_TEMPLATES))
+
+        for row, device in enumerate(DEVICE_TEMPLATES):
+            pitem = QTableWidgetItem(device)
+            table.setItem(row, 0, pitem)
+
+        table.setFixedWidth(200)
+        vlayout_left.addWidget(table)
+
+        image = QLabel()
+        image.setFixedWidth(200)
+        image.setFixedHeight(200)
+
+        vlayout_left.addWidget(image)
+
+        vlayout = QVBoxLayout()
+        template_name = QLabel("")
+        vlayout.addWidget(template_name)
+
+        info = QLabel(infotext)
+        vlayout.addWidget(info)
+
+        description = QPlainTextEdit()
+        description.clear()
+        description.insertPlainText(descriptiontext)
+
+        vlayout.addWidget(description)
+        hlayout.addLayout(vlayout_left)
+        hlayout.addLayout(vlayout)
+        dialog.layout.addLayout(hlayout)
+        table.cellClicked.connect(change)
+
+        dialog.layout.addWidget(dialog.buttonBox)
+        dialog.setLayout(dialog.layout)
+
+        if dialog.exec():
+            template = template_name.text()
+            if template in DEVICE_TEMPLATES:
+                device_data = DEVICE_TEMPLATES[template]
+                for key, value in device_data["setup"].items():
+                    self.config[key] = value
+                self.table_load()
+            return ""
 
     def run(self):
         dialog = QDialog()
@@ -264,12 +470,15 @@ class config:
                     data["widget"].addItem(option)
                 if name == "type":
                     data["widget"].activated.connect(self.on_type_change)
-            elif data["type"] == int:
+            elif data["type"] is bool:
+                data["widget"] = QCheckBox()
+                data["widget"].setChecked(data["default"])
+            elif data["type"] is int:
                 data["widget"] = QSpinBox()
                 data["widget"].setValue(data["default"])
                 data["widget"].setMinimum(data["min"])
                 data["widget"].setMaximum(data["max"])
-            elif data["type"] == float:
+            elif data["type"] is float:
                 data["widget"] = QDoubleSpinBox()
                 data["widget"].setValue(data["default"])
                 data["widget"].setDecimals(data["decimals"])
@@ -292,6 +501,10 @@ class config:
         button_del = QPushButton("Remove")
         button_del.clicked.connect(self.del_item)
         edit_layout.addWidget(button_del, row_n + 1, 1)
+
+        button_template = QPushButton("Template")
+        button_template.clicked.connect(self.select_template)
+        edit_layout.addWidget(button_template, row_n + 1, 2)
 
         hlayout.addLayout(vlayout_left)
         hlayout.addLayout(edit_layout)

@@ -14,15 +14,15 @@ package_data = {
     "riocore": [
         "files/*",
         "boards/*",
-        "modules/*",
+        "boards/*/*",
+        "modules/*/*",
         "configs/*/*",
     ],
 }
 packages = ["riocore"]
 
 for script in glob.glob("bin/*"):
-    if not "gui" in script:
-        scripts.append(script)
+    scripts.append(script)
 
 for folder in ("riocore/plugins/*", "riocore/generator/*", "riocore/generator/pins/*", "riocore/generator/toolchains/*", "riocore/interfaces/*"):
     packages.append(folder.replace("/*", "").replace("/", "."))
@@ -30,7 +30,7 @@ for folder in ("riocore/plugins/*", "riocore/generator/*", "riocore/generator/pi
         if "__" not in module and not module.endswith(".py"):
             module_name = module.replace("/", ".")
             packages.append(module_name)
-            package_data[module_name] = ["*.c", "*.v"]
+            package_data[module_name] = ["*.c", "*.v", "*.png", "*.md"]
 
 setup(
     name="riocore",
@@ -40,10 +40,10 @@ setup(
     packages=packages,
     package_data=package_data,
     scripts=scripts,
-    url="https://github.com/multigcs/LinuxCNC-RIO/",
+    url="https://github.com/multigcs/riocore/",
     license="LICENSE",
     description="riocore",
     long_description=open("README.md").read(),
-    install_requires=[],
+    install_requires=["PyQt5>=5.15", "graphviz>=0.20", "pyqtgraph>=0.13.3"],
     include_package_data=True,
 )

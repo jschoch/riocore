@@ -1,7 +1,12 @@
 # counter
+**pulse counter input**
+
+to counting digital pulses, supporting up,down and reset signals
+
+Keywords: counter pulse
 
 
-pulse counter input
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,40 +27,37 @@ pulse counter input
 ```
 
 ## Pins:
+*FPGA-pins*
 ### up:
 increment pin
 
  * direction: input
- * pullup: False
+ * optional: True
 
 ### down:
 decrement pin
 
  * direction: input
- * pullup: False
+ * optional: True
 
 ### reset:
 reset to zero pin
 
  * direction: input
- * pullup: False
+ * optional: True
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### counter:
 
  * type: float
@@ -63,6 +65,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### counter:
 
  * size: 32 bit
@@ -74,7 +77,6 @@ target net in LinuxCNC
 {
     "type": "counter",
     "name": "",
-    "net": "",
     "pins": {
         "up": {
             "pin": "0",
@@ -124,4 +126,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * counter.v
+ * [counter.v](counter.v)

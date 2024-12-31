@@ -1,7 +1,12 @@
 # rcservo
+**rc-servo output**
+
+to control rc-servos, usable as joint or as variable/analog output in LinuxCNC
+
+Keywords: joint rcservo
 
 
-rc-servo output
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,13 +21,14 @@ rc-servo output
 ```
 
 ## Pins:
+*FPGA-pins*
 ### pwm:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### frequency:
 update frequency
 
@@ -35,13 +41,7 @@ update frequency
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 ### axis:
 axis name (X,Y,Z,...)
@@ -53,17 +53,18 @@ axis name (X,Y,Z,...)
 configure as joint
 
  * type: bool
- * default: True
+ * default: False
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### position:
 absolute position (-100 = 1ms / 100 = 2ms)
 
  * type: float
  * direction: output
- * min: -100
- * max: 100
+ * min: -100.0
+ * max: 100.0
 
 ### enable:
 
@@ -72,6 +73,7 @@ absolute position (-100 = 1ms / 100 = 2ms)
 
 
 ## Interfaces:
+*transport layer*
 ### position:
 
  * size: 32 bit
@@ -89,9 +91,8 @@ absolute position (-100 = 1ms / 100 = 2ms)
     "type": "rcservo",
     "frequency": 100,
     "name": "",
-    "net": "",
     "axis": "",
-    "is_joint": true,
+    "is_joint": false,
     "pins": {
         "pwm": {
             "pin": "0",
@@ -128,4 +129,4 @@ absolute position (-100 = 1ms / 100 = 2ms)
 ```
 
 ## Verilogs:
- * rcservo.v
+ * [rcservo.v](rcservo.v)

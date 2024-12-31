@@ -1,7 +1,12 @@
 # dis7seg
+**7segment display with buttons**
+
+only usable for devboards with 7segment display / better using other 7seg plugins
+
+Keywords: info display
 
 
-7segment display with buttons
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -46,77 +51,70 @@
 ```
 
 ## Pins:
+*FPGA-pins*
 ### en1:
 
  * direction: output
- * pullup: False
 
 ### en2:
 
  * direction: output
- * pullup: False
 
 ### en3:
 
  * direction: output
- * pullup: False
 
 ### en4:
 
  * direction: output
- * pullup: False
 
 ### seg_a:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 ### seg_b:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 ### seg_c:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 ### seg_d:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 ### seg_e:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 ### seg_f:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 ### seg_g:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### value:
 number to display
 
@@ -127,10 +125,12 @@ number to display
 
 
 ## Interfaces:
+*transport layer*
 ### value:
 
  * size: 16 bit
  * direction: output
+ * multiplexed: True
 
 
 ## Full-Example:
@@ -138,7 +138,6 @@ number to display
 {
     "type": "dis7seg",
     "name": "",
-    "net": "",
     "pins": {
         "en1": {
             "pin": "0",
@@ -246,4 +245,4 @@ number to display
 ```
 
 ## Verilogs:
- * dis7seg.v
+ * [dis7seg.v](dis7seg.v)

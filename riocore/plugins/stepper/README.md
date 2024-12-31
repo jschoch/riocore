@@ -1,7 +1,12 @@
 # stepper
+**stepper driver output for H-Bridges like L298**
+
+direct stepper driver with 4pin's directly controlled by the FPGA
+
+Keywords: stepper joint hbridge
 
 
-stepper driver output for H-Bridges like L298
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -25,39 +30,31 @@ stepper driver output for H-Bridges like L298
 ```
 
 ## Pins:
+*FPGA-pins*
 ### a1:
 
  * direction: output
- * pullup: False
 
 ### a2:
 
  * direction: output
- * pullup: False
 
 ### b1:
 
  * direction: output
- * pullup: False
 
 ### b2:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 ### axis:
 axis name (X,Y,Z,...)
@@ -69,10 +66,11 @@ axis name (X,Y,Z,...)
 configure as joint
 
  * type: bool
- * default: True
+ * default: False
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### velocity:
 speed in steps per second
 
@@ -80,12 +78,14 @@ speed in steps per second
  * direction: output
  * min: -1000000
  * max: 1000000
+ * unit: Hz
 
 ### position:
 position feedback
 
  * type: float
  * direction: input
+ * unit: Steps
 
 ### enable:
 
@@ -94,6 +94,7 @@ position feedback
 
 
 ## Interfaces:
+*transport layer*
 ### velocity:
 
  * size: 32 bit
@@ -115,9 +116,8 @@ position feedback
 {
     "type": "stepper",
     "name": "",
-    "net": "",
     "axis": "",
-    "is_joint": true,
+    "is_joint": false,
     "pins": {
         "a1": {
             "pin": "0",
@@ -189,4 +189,4 @@ position feedback
 ```
 
 ## Verilogs:
- * stepper.v
+ * [stepper.v](stepper.v)

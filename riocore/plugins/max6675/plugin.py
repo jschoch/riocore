@@ -4,22 +4,26 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "max6675"
+        self.INFO = "SPI temperature sensor"
+        self.DESCRIPTION = "to messurement very high temperatures of up to 1250 degrees Celsius"
+        self.KEYWORDS = "analog adc"
+        self.ORIGIN = ""
         self.VERILOGS = ["max6675.v"]
         self.PINDEFAULTS = {
             "miso": {
                 "direction": "input",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
             "sclk": {
                 "direction": "output",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
             "sel": {
                 "direction": "output",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
         }
         self.INTERFACE = {
@@ -34,15 +38,13 @@ class Plugin(PluginBase):
                 "unit": "°C",
             },
         }
-        self.INFO = "SPI temperature sensor"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
-        instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
+        instance["predefines"]
+        instance["parameter"]
+        instance["arguments"]
         # example
         # frequency = int(self.plugin_setup.get("frequency", 100))
         # divider = self.system_setup["speed"] // frequency

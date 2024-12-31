@@ -1,7 +1,12 @@
 # ds18b20
+**1Wire Temperature sensor**
+
+for cheap 1wire temperature sensor's, only one per pin is supported at the moment
+
+Keywords: adc analog temperature
 
 
-1Wire Temperature sensor
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,34 +21,32 @@
 ```
 
 ## Pins:
+*FPGA-pins*
 ### one_wire:
 
  * direction: inout
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### temperature:
 
  * type: float
  * direction: input
+ * unit: Hz
 
 
 ## Interfaces:
+*transport layer*
 ### temperature:
 
  * size: 16 bit
@@ -55,7 +58,6 @@ target net in LinuxCNC
 {
     "type": "ds18b20",
     "name": "",
-    "net": "",
     "pins": {
         "one_wire": {
             "pin": "0",
@@ -83,4 +85,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * ds18b20.v
+ * [ds18b20.v](ds18b20.v)

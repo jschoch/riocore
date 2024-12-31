@@ -1,7 +1,16 @@
 # max10adc
+**MAX10 ADC inputs**
+
+only usable for the max10 fpga boards
+
+Keywords: analog adc voltage ampere
 
 
-MAX10 ADC inputs
+![image.png](image.png)
+
+## Limitations
+* family: MAX 10
+* toolchains: quartus
 
 ## Basic-Example:
 ```
@@ -12,23 +21,20 @@ MAX10 ADC inputs
 ```
 
 ## Pins:
+*FPGA-pins*
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### adc0:
 
  * type: float
@@ -71,6 +77,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### adc0:
 
  * size: 16 bit
@@ -117,7 +124,6 @@ target net in LinuxCNC
 {
     "type": "max10adc",
     "name": "",
-    "net": "",
     "pins": {},
     "signals": {
         "adc0": {
@@ -213,4 +219,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * max10adc.v
+ * [max10adc.v](max10adc.v)

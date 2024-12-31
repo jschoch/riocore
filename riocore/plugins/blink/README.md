@@ -1,7 +1,12 @@
 # blink
+**blinking output pin**
+
+outputs a fixed frequency / was used to indicate that the FPGA is runing / no control signals
+
+Keywords: led blinking
 
 
-blinking output pin
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,13 +21,14 @@ blinking output pin
 ```
 
 ## Pins:
+*FPGA-pins*
 ### led:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### frequency:
 blink frequency in Hz
 
@@ -34,13 +40,15 @@ blink frequency in Hz
 name of this plugin instance
 
  * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 
 
 ## Interfaces:
+*transport layer*
 
 
 ## Full-Example:
@@ -64,4 +72,4 @@ name of this plugin instance
 ```
 
 ## Verilogs:
- * blink.v
+ * [blink.v](blink.v)

@@ -4,28 +4,32 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "stepper"
-        self.TYPE = "joint"
+        self.INFO = "stepper driver output for H-Bridges like L298"
+        self.DESCRIPTION = "direct stepper driver with 4pin's directly controlled by the FPGA"
+        self.KEYWORDS = "stepper joint hbridge"
+        self.ORIGIN = ""
         self.VERILOGS = ["stepper.v"]
+        self.TYPE = "joint"
         self.PINDEFAULTS = {
             "a1": {
                 "direction": "output",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
             "a2": {
                 "direction": "output",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
             "b1": {
                 "direction": "output",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
             "b2": {
                 "direction": "output",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
         }
         self.INTERFACE = {
@@ -53,6 +57,7 @@ class Plugin(PluginBase):
             "position": {
                 "direction": "input",
                 "unit": "Steps",
+                "scale": 320.0,
                 "description": "position feedback",
             },
             "enable": {
@@ -60,15 +65,13 @@ class Plugin(PluginBase):
                 "bool": True,
             },
         }
-        self.INFO = "stepper driver output for H-Bridges like L298"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
+        instance["predefines"]
         instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
+        instance["arguments"]
         instance_parameter["STEPTYPE"] = self.plugin_setup.get("steptype", "1")
         return instances
 

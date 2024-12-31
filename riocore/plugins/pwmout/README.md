@@ -1,7 +1,12 @@
 # pwmout
+**pwm output**
+
+to control AC/DC-Motors or for analog outputs
+
+Keywords: joint dcservo acservo 10v 5v dac analog
 
 
-pwm output
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,23 +27,24 @@ pwm output
 ```
 
 ## Pins:
+*FPGA-pins*
 ### pwm:
 
  * direction: output
- * pullup: False
 
 ### dir:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 ### en:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 
 ## Options:
+*user-options*
 ### frequency:
 PWM frequency
 
@@ -52,13 +58,7 @@ PWM frequency
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 ### axis:
 axis name (X,Y,Z,...)
@@ -70,16 +70,18 @@ axis name (X,Y,Z,...)
 configure as joint
 
  * type: bool
- * default: True
+ * default: False
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### dty:
 
  * type: float
  * direction: output
- * min: -100
+ * min: 0
  * max: 100
+ * unit: %
 
 ### enable:
 
@@ -88,6 +90,7 @@ configure as joint
 
 
 ## Interfaces:
+*transport layer*
 ### dty:
 
  * size: 32 bit
@@ -105,9 +108,8 @@ configure as joint
     "type": "pwmout",
     "frequency": 10000,
     "name": "",
-    "net": "",
     "axis": "",
-    "is_joint": true,
+    "is_joint": false,
     "pins": {
         "pwm": {
             "pin": "0",
@@ -160,4 +162,4 @@ configure as joint
 ```
 
 ## Verilogs:
- * pwmout.v
+ * [pwmout.v](pwmout.v)

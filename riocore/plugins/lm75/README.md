@@ -1,7 +1,12 @@
 # lm75
+**I2C Temperature-Sensor**
+
+simple temperature sensor
+
+Keywords: analog adc temperature
 
 
-I2C Temperature-Sensor
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -19,39 +24,36 @@ I2C Temperature-Sensor
 ```
 
 ## Pins:
+*FPGA-pins*
 ### sda:
 
  * direction: inout
- * pullup: False
 
 ### scl:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### temperature:
 
  * type: float
  * direction: input
+ * unit: °C
 
 
 ## Interfaces:
+*transport layer*
 ### temperature:
 
  * size: 16 bit
@@ -63,7 +65,6 @@ target net in LinuxCNC
 {
     "type": "lm75",
     "name": "",
-    "net": "",
     "pins": {
         "sda": {
             "pin": "0",
@@ -99,4 +100,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * lm75.v
+ * [lm75.v](lm75.v)

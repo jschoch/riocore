@@ -1,7 +1,12 @@
 # stepdir
+**step/dir output for stepper drivers**
+
+to control motor drivers via step/dir pin's and an optional enable pin
+
+Keywords: stepper servo joint
 
 
-step/dir output for stepper drivers
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,34 +27,28 @@ step/dir output for stepper drivers
 ```
 
 ## Pins:
+*FPGA-pins*
 ### step:
 
  * direction: output
- * pullup: False
 
 ### dir:
 
  * direction: output
- * pullup: False
 
 ### en:
 
  * direction: output
- * pullup: False
+ * optional: True
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 ### axis:
 axis name (X,Y,Z,...)
@@ -61,23 +60,26 @@ axis name (X,Y,Z,...)
 configure as joint
 
  * type: bool
- * default: True
+ * default: False
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### velocity:
 speed in steps per second
 
  * type: float
  * direction: output
- * min: -1000000
- * max: 1000000
+ * min: -100000
+ * max: 100000
+ * unit: Hz
 
 ### position:
 position feedback
 
  * type: float
  * direction: input
+ * unit: steps
 
 ### enable:
 
@@ -86,6 +88,7 @@ position feedback
 
 
 ## Interfaces:
+*transport layer*
 ### velocity:
 
  * size: 32 bit
@@ -107,9 +110,8 @@ position feedback
 {
     "type": "stepdir",
     "name": "",
-    "net": "",
     "axis": "",
-    "is_joint": true,
+    "is_joint": false,
     "pins": {
         "step": {
             "pin": "0",
@@ -173,4 +175,4 @@ position feedback
 ```
 
 ## Verilogs:
- * stepdir.v
+ * [stepdir.v](stepdir.v)

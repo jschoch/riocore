@@ -1,7 +1,12 @@
 # as5600
+**magnetic absolute encoder**
+
+for position feedbacks
+
+Keywords: encoder scale feedback absolute
 
 
-magnetic absolute encoder
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -19,32 +24,27 @@ magnetic absolute encoder
 ```
 
 ## Pins:
+*FPGA-pins*
 ### sda:
 
  * direction: inout
- * pullup: False
 
 ### scl:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### position:
 
  * type: float
@@ -52,6 +52,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### position:
 
  * size: 32 bit
@@ -63,7 +64,6 @@ target net in LinuxCNC
 {
     "type": "as5600",
     "name": "",
-    "net": "",
     "pins": {
         "sda": {
             "pin": "0",
@@ -99,4 +99,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * as5600.v
+ * [as5600.v](as5600.v)

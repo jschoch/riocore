@@ -1,7 +1,12 @@
 # spi
-for direct connection to Raspberry-PI or over UDB2SPI-Bridges
+**spi interface for host comunication**
 
-spi interface for host comunication
+for direct connections to Raspberry-PI or over UDB2SPI-Bridges
+
+Keywords: interface spi raspberry rpi
+
+
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -25,39 +30,39 @@ spi interface for host comunication
 ```
 
 ## Pins:
+*FPGA-pins*
 ### mosi:
 
  * direction: input
- * pullup: False
 
 ### miso:
 
  * direction: output
- * pullup: False
 
 ### sclk:
 
  * direction: input
- * pullup: False
 
 ### sel:
 
  * direction: input
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 
 
 ## Interfaces:
+*transport layer*
 
 
 ## Full-Example:
@@ -110,4 +115,4 @@ name of this plugin instance
 ```
 
 ## Verilogs:
- * spi.v
+ * [spi.v](spi.v)

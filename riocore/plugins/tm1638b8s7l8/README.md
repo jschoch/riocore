@@ -1,7 +1,12 @@
 # tm1638b8s7l8
+**7segment display with buttons**
+
+with this plugin, you can use cheap TM1638 boards with LED's/Switches and 7segment displays as control interface for LinuxCNC (JOG/DRO)
+
+Keywords: display info status keyboard buttons
 
 
-7segment display with buttons
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,37 +27,40 @@
 ```
 
 ## Pins:
+*FPGA-pins*
 ### sel:
+Select-Pin (STB)
 
  * direction: output
- * pullup: False
 
 ### sclk:
+Clock-Pin (CLK)
 
  * direction: output
- * pullup: False
 
 ### data:
+Data-Pin (DIO)
 
  * direction: inout
- * pullup: False
 
 
 ## Options:
+*user-options*
+### speed:
+Data-clock
+
+ * type: int
+ * default: 1000000
+
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### sw0:
 
  * type: bit
@@ -134,13 +142,15 @@ target net in LinuxCNC
  * direction: output
 
 ### number1:
+last 6 digits (-6500.0 -> 6500.0)
 
  * type: float
  * direction: output
- * min: -65000
- * max: 65000
+ * min: -6500.0
+ * max: 6500.0
 
 ### number2:
+first 2 digits (0 -> 99)
 
  * type: float
  * direction: output
@@ -149,103 +159,122 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### sw0:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### sw1:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### sw2:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### sw3:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### sw4:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### sw5:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### sw6:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### sw7:
 
  * size: 1 bit
  * direction: input
+ * multiplexed: True
 
 ### led0:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### led1:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### led2:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### led3:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### led4:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### led5:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### led6:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### led7:
 
  * size: 1 bit
  * direction: output
+ * multiplexed: True
 
 ### number1:
 
  * size: 24 bit
  * direction: output
+ * multiplexed: True
 
 ### number2:
 
  * size: 8 bit
  * direction: output
+ * multiplexed: True
 
 
 ## Full-Example:
 ```
 {
     "type": "tm1638b8s7l8",
+    "speed": 1000000,
     "name": "",
-    "net": "",
     "pins": {
         "sel": {
             "pin": "0",
@@ -444,4 +473,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * tm1638b8s7l8.v
+ * [tm1638b8s7l8.v](tm1638b8s7l8.v)

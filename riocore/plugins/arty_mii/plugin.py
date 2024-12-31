@@ -4,6 +4,14 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "arty_mii"
+        self.INFO = "udp interface for host comunication - experimental - Arty7-35t only"
+        self.DESCRIPTION = ""
+        self.KEYWORDS = "network ethernet interface udp"
+        self.ORIGIN = "https://github.com/alexforencich/verilog-ethernet"
+        self.LIMITATIONS = {
+            "boards": ["Arty-a7-35t"],
+            "toolchains": ["vivado"],
+        }
         self.VERILOGS = [
             "sync_signal.v",
             "ssio_sdr_in.v",
@@ -135,15 +143,13 @@ class Plugin(PluginBase):
                 "description": "UDP-Port",
             },
         }
-        self.INFO = "udp interface for host comunication - experimental - Arty7-35t only"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
+        instance["predefines"]
         instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
+        instance["arguments"]
         instance["arguments"]["rst"] = "reset"
         instance["arguments"]["clk25"] = "sysclk25"
 
@@ -159,7 +165,5 @@ class Plugin(PluginBase):
 
         instance_parameter["BUFFER_SIZE"] = "BUFFER_SIZE"
         instance_parameter["MSGID"] = "32'h74697277"
-
-        instance_parameter["TIMEOUT"] = f"32'd{self.system_setup['speed'] // 4}"
 
         return instances

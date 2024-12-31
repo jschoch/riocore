@@ -1,7 +1,12 @@
 # quadencoder
+**quadencoder**
+
+usable as position feedback for closed-loop configuration or as variable input to control LinuxCNC overwrites
+
+Keywords: feedback encoder rotary linear glassscale
 
 
-quadencoder
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -19,32 +24,37 @@ quadencoder
 ```
 
 ## Pins:
+*FPGA-pins*
 ### a:
 
  * direction: input
- * pullup: True
+ * pull: up
 
 ### b:
 
  * direction: input
- * pullup: True
+ * pull: up
 
 
 ## Options:
+*user-options*
+### quad_type:
+encoder type
+
+ * type: int
+ * min: 0
+ * max: 4
+ * default: 2
+
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### position:
 position feedback in steps
 
@@ -65,6 +75,7 @@ calculates revolutions per minute
 
 
 ## Interfaces:
+*transport layer*
 ### position:
 
  * size: 32 bit
@@ -75,8 +86,8 @@ calculates revolutions per minute
 ```
 {
     "type": "quadencoder",
+    "quad_type": 2,
     "name": "",
-    "net": "",
     "pins": {
         "a": {
             "pin": "0",
@@ -137,4 +148,4 @@ calculates revolutions per minute
 ```
 
 ## Verilogs:
- * quadencoder.v
+ * [quadencoder.v](quadencoder.v)

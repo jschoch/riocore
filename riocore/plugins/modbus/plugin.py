@@ -1,7 +1,6 @@
-import os
-from struct import *
+from struct import unpack
 
-from riocore.checksums import crc8, crc16
+from riocore.checksums import crc16
 from riocore.plugins import PluginBase
 from riocore.plugins.modbus import hy_vfd
 
@@ -11,6 +10,10 @@ class Plugin(PluginBase):
 
     def setup(self):
         self.NAME = "modbus"
+        self.INFO = "generic modbus plugin"
+        self.DESCRIPTION = "to read and write values (analog/digital) via modbus, also supports hy_vfd spindles"
+        self.KEYWORDS = "modbus vfd spindle expansion analog digital"
+        self.ORIGIN = "https://github.com/ChandulaNethmal/Implemet-a-UART-link-on-FPGA-with-verilog/tree/master"
         self.VERILOGS = ["modbus.v", "uart_baud.v", "uart_rx.v", "uart_tx.v"]
         self.PINDEFAULTS = {
             "tx": {
@@ -56,8 +59,6 @@ class Plugin(PluginBase):
         self.PLUGIN_CONFIG = True
         self.TIMEOUT = 200.0
         self.DELAY = 90.0
-        self.INFO = "generic modbus plugin"
-        self.DESCRIPTION = ""
         self.rx_buffersize = 128
         self.tx_buffersize = 128
         self.OPTIONS["rx_buffersize"]["default"] = self.rx_buffersize
@@ -202,9 +203,9 @@ class Plugin(PluginBase):
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
+        instance["predefines"]
         instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
+        instance["arguments"]
         baud = int(self.plugin_setup.get("baud", self.OPTIONS["baud"]["default"]))
         instance_parameter["RX_BUFFERSIZE"] = self.plugin_setup.get("rx_buffersize", self.OPTIONS["rx_buffersize"]["default"])
         instance_parameter["TX_BUFFERSIZE"] = self.plugin_setup.get("tx_buffersize", self.OPTIONS["tx_buffersize"]["default"])
@@ -262,12 +263,11 @@ class Plugin(PluginBase):
             config["instance"].frameio_rx(frame_new, frame_id, frame_len, frame_data)
         elif frame_new:
             # print(f"rx frame {self.signal_active} {frame_id} {frame_len}: {frame_data}")
+
             if frame_len > 4:
                 address = frame_data[0]
                 ctype = frame_data[1]
-                data_len = frame_data[2]
                 csum = crc16()
-                cmd = []
                 csum.update(frame_data[:-2])
                 csum_calc = csum.intdigest()
                 if csum_calc != frame_data[-2:]:
@@ -285,7 +285,10 @@ class Plugin(PluginBase):
                                 if address != signal_address:
                                     print(f"ERROR: wrong address {address} != {signal_address}")
                                 elif direction == "input":
-                                    start_pos = 3 + vn * 2
+                                    vlen = 2
+                                    if self.is_float:
+                                        vlen = 4
+                                    start_pos = 3 + vn * vlen
                                     if ctype == 2:
                                         if frame_data[3] & (1 << vn) != 0:
                                             self.SIGNALS[value_name]["value"] = 1
@@ -296,11 +299,14 @@ class Plugin(PluginBase):
                                             if direction == "input":
                                                 self.SIGNALS[f"{value_name}_valid"]["value"] = 1
                                     else:
-                                        value_list = frame_data[start_pos : start_pos + 2]
-                                        if value_list and len(value_list) == 2:
+                                        value_list = frame_data[start_pos : start_pos + vlen]
+                                        if value_list and len(value_list) == vlen:
                                             vscale = self.SIGNALS[value_name]["scale"]
                                             direction = self.SIGNALS[value_name]["direction"]
-                                            self.SIGNALS[value_name]["value"] = self.list2int(value_list)
+                                            if self.is_float and value_list and len(value_list) == vlen:
+                                                self.SIGNALS[value_name]["value"] = unpack(">f", bytearray(value_list))[0]
+                                            else:
+                                                self.SIGNALS[value_name]["value"] = self.list2int(value_list)
                                             if vscale:
                                                 self.SIGNALS[value_name]["value"] *= vscale
                                             if direction == "input":
@@ -316,7 +322,11 @@ class Plugin(PluginBase):
                             else:
                                 vscale = self.SIGNALS[self.signal_name]["scale"]
                                 direction = self.SIGNALS[self.signal_name]["direction"]
-                                self.SIGNALS[self.signal_name]["value"] = self.list2int(frame_data[3:-2])
+                                if self.is_float:
+                                    self.SIGNALS[self.signal_name]["value"] = unpack(">f", bytearray(frame_data[3:-2]))[0]
+                                else:
+                                    self.SIGNALS[self.signal_name]["value"] = self.list2int(frame_data[3:-2])
+
                                 if vscale:
                                     self.SIGNALS[self.signal_name]["value"] *= vscale
                                 if direction == "input":
@@ -354,6 +364,7 @@ class Plugin(PluginBase):
             ctype = config["type"]
             self.signal_name = signal_name
             self.signal_address = address
+            self.is_float = config.get("is_float", False)
             self.signal_values = config.get("values", 1)
             register = self.int2list(config["register"])
             n_values = self.int2list(self.signal_values)
@@ -380,12 +391,19 @@ class Plugin(PluginBase):
                         value *= 65280
                     cmd = [address, ctype] + register + self.int2list(value)
             else:
-                cmd = [address, ctype] + register + n_values
+                if self.is_float:
+                    n_values = self.int2list(self.signal_values * 2)
+                    cmd = [address, ctype] + register + n_values
+                else:
+                    cmd = [address, ctype] + register + n_values
+
         csum = crc16()
         csum.update(cmd)
         csum_calc = csum.intdigest()
         frame_data = cmd + csum_calc
+
         # print(f"tx frame -- {len(frame_data)}: {frame_data}")
+
         return frame_data
 
     def globals_c(self):
@@ -413,14 +431,11 @@ class Plugin(PluginBase):
         sn = 0
         for signal_name, signal_config in self.plugin_setup.get("config", {}).items():
             direction = signal_config["direction"]
-            delay = signal_config.get("delay", self.DELAY)
-            timeout = signal_config.get("timeout", self.TIMEOUT) + delay
             address = signal_config["address"]
             ctype = signal_config["type"]
             vscale = signal_config.get("scale", 1.0)
+            self.is_float = signal_config.get("is_float", False)
             self.signal_values = signal_config.get("values", 1)
-            register = self.int2list(signal_config["register"])
-            n_values = self.int2list(self.signal_values)
             self.signal_name = signal_name
             self.signal_address = address
             if ctype == 101:
@@ -433,7 +448,6 @@ class Plugin(PluginBase):
                     output.append("                    data_len = frame_data[2];")
 
                     if ctype == 2:
-
                         output.append(f"                    // get {self.signal_values} 1bit values ({signal_name})")
                         output.append(f"                    if (data_addr == {address} && data_len == 1) {{")
                         for vn in range(0, self.signal_values):
@@ -459,29 +473,44 @@ class Plugin(PluginBase):
                     output.append("                    } else {")
                     for vn in range(0, self.signal_values):
                         value_name = f"value_{self.signal_name}_{vn}"
-                        output.append(f'                        rtapi_print("rx error: addr or len\\n");')
+                        output.append('                        // rtapi_print("rx error: addr or len\\n");')
                         output.append(f"                        {value_name}_errors += 1;")
                         output.append(f"                        {value_name}_valid = 0;")
                     output.append("                    }")
                 else:
-                    output.append(f"                    // get single 16bit value")
-                    output.append("                    data_len = frame_data[2];")
-                    output.append(f"                    if (data_addr == {address} && data_len == {self.signal_values * 2}) {{")
-                    output.append(f"                        value_{self.signal_name} = (frame_data[{3}]<<8) + (frame_data[{4}] & 0xFF);")
-                    if vscale:
-                        output.append(f"                        value_{self.signal_name} *= {vscale};")
-                    output.append(f"                        value_{self.signal_name}_valid = 1;")
-                    output.append("                    } else {")
-                    output.append(f'                        rtapi_print("rx error: addr or len\\n");')
-                    output.append(f"                        value_{self.signal_name}_errors += 1;")
-                    output.append(f"                        value_{self.signal_name}_valid = 0;")
-                    output.append("                    }")
+                    if self.is_float:
+                        output.append("                    // get single 32bit float value")
+                        output.append("                    data_len = frame_data[2];")
+                        output.append(f"                    if (data_addr == {address} && data_len == {self.signal_values * 4}) {{")
+                        output.append("                        uint8_t farray[] = {frame_data[6], frame_data[5], frame_data[4], frame_data[3]};")
+                        output.append(f"                        memcpy((uint8_t *)&value_{self.signal_name}, (uint8_t *)&farray, 4);")
+                        if vscale:
+                            output.append(f"                        value_{self.signal_name} *= {vscale};")
+                        output.append(f"                        value_{self.signal_name}_valid = 1;")
+                        output.append("                    } else {")
+                        output.append('                        // rtapi_print("rx error: addr or len\\n");')
+                        output.append(f"                        value_{self.signal_name}_errors += 1;")
+                        output.append(f"                        value_{self.signal_name}_valid = 0;")
+                        output.append("                    }")
+                    else:
+                        output.append("                    // get single 16bit value")
+                        output.append("                    data_len = frame_data[2];")
+                        output.append(f"                    if (data_addr == {address} && data_len == {self.signal_values * 2}) {{")
+                        output.append(f"                        value_{self.signal_name} = (frame_data[{3}]<<8) + (frame_data[{4}] & 0xFF);")
+                        if vscale:
+                            output.append(f"                        value_{self.signal_name} *= {vscale};")
+                        output.append(f"                        value_{self.signal_name}_valid = 1;")
+                        output.append("                    } else {")
+                        output.append('                        // rtapi_print("rx error: addr or len\\n");')
+                        output.append(f"                        value_{self.signal_name}_errors += 1;")
+                        output.append(f"                        value_{self.signal_name}_valid = 0;")
+                        output.append("                    }")
                 output.append("                    break;")
                 output.append("                }")
             sn += 1
         output.append("            }")
         output.append("        } else {")
-        output.append('            rtapi_print("ERROR: CSUM: %d|%d != %d|%d\\n", crc & 0xFF, crc>>8 & 0xFF, frame_data[frame_len - 2], frame_data[frame_len - 1]);')
+        output.append('            // rtapi_print("ERROR: CSUM: %d|%d != %d|%d\\n", crc & 0xFF, crc>>8 & 0xFF, frame_data[frame_len - 2], frame_data[frame_len - 1]);')
         output.append("        }")
         output.append('        // rtapi_print("rx frame %i %i: ", frame_id, frame_len);')
         output.append("        // for (n = 0; n < frame_len; n++) {")
@@ -494,7 +523,7 @@ class Plugin(PluginBase):
     def frameio_tx_c(self):
         output = []
         output.append("    if (frame_timeout == 1) {")
-        output.append(f'            rtapi_print("rx error: timeout: %d\\n", {self.instances_name}_signal_active);')
+        output.append(f'            // rtapi_print("rx error: timeout: %d\\n", {self.instances_name}_signal_active);')
         sn = 0
         for signal_name, signal_config in self.plugin_setup.get("config", {}).items():
             direction = signal_config["direction"]
@@ -502,7 +531,6 @@ class Plugin(PluginBase):
             timeout = signal_config.get("timeout", self.TIMEOUT) + delay
             address = signal_config["address"]
             ctype = signal_config["type"]
-            vscale = signal_config.get("scale", 1.0)
             self.signal_values = signal_config.get("values", 1)
             register = self.int2list(signal_config["register"])
             n_values = self.int2list(self.signal_values)
@@ -519,7 +547,7 @@ class Plugin(PluginBase):
                         output.append(f"                {value_name}_errors += 1;")
                     output.append("            }")
                 else:
-                    output.append(f"            // get single 16bit value")
+                    output.append("            // get single 16bit value")
                     output.append(f"            if ({self.instances_name}_signal_active == {sn}) {{")
                     output.append(f"                value_{signal_name}_valid = 0;")
                     output.append(f"                value_{signal_name}_errors += 1;")
@@ -542,6 +570,7 @@ class Plugin(PluginBase):
             address = signal_config["address"]
             ctype = signal_config["type"]
             self.signal_values = signal_config.get("values", 1)
+            self.is_float = signal_config.get("is_float", False)
             register = self.int2list(signal_config["register"])
             n_values = self.int2list(self.signal_values)
             self.signal_name = signal_name
@@ -551,24 +580,23 @@ class Plugin(PluginBase):
             output.append(f"                delay = {delay};")
             output.append(f"                timeout = {timeout};")
             if ctype == 101:
-                print("handle hy_vfd ...")
-                output.append(f"                // handle hy_vfd")
+                output.append("                // handle hy_vfd")
                 output += signal_config["instance"].frameio_tx_c()
             elif direction == "output":
                 if self.signal_values > 1:
                     if ctype == 15:
-                        output.append(f"                // set 1bit values")
+                        output.append("                // set 1bit values")
                     else:
-                        output.append(f"                // set 16bit values")
+                        output.append("                // set 16bit values")
                     output.append(f"                frame_data[0] = {address};")
                     output.append(f"                frame_data[1] = {ctype};")
                     output.append(f"                frame_data[2] = {register[0]};")
                     output.append(f"                frame_data[3] = {register[1]};")
                     output.append(f"                frame_data[4] = {n_values[0]};")
                     output.append(f"                frame_data[5] = {n_values[1]};")
-                    output.append(f"                frame_data[6] = 1;")
+                    output.append("                frame_data[6] = 1;")
                     if ctype == 15:
-                        output.append(f"                uint8_t bitvalues = 0;")
+                        output.append("                uint8_t bitvalues = 0;")
                         for vn in range(0, self.signal_values):
                             value_name = f"{self.signal_name}_{vn}"
                             output.append(f"                if (value_{value_name} == 1) {{")
@@ -584,34 +612,45 @@ class Plugin(PluginBase):
                         output.append(f"                frame_len = {8 + vn * 2};")
                 else:
                     if ctype == 5:
-                        output.append(f"                // set coil value")
+                        output.append("                // set coil value")
                     else:
-                        output.append(f"                // set 16bit value")
+                        output.append("                // set 16bit value")
                     output.append(f"                frame_data[0] = {address};")
                     output.append(f"                frame_data[1] = {ctype};")
                     output.append(f"                frame_data[2] = {register[0]};")
                     output.append(f"                frame_data[3] = {register[1]};")
                     if ctype == 5:
                         output.append(f"                if (value_{signal_name} == 1) {{")
-                        output.append(f"                    frame_data[4] = 255;")
-                        output.append(f"                    frame_data[5] = 0;")
+                        output.append("                    frame_data[4] = 255;")
+                        output.append("                    frame_data[5] = 0;")
                         output.append("                } else {")
-                        output.append(f"                    frame_data[4] = 0;")
-                        output.append(f"                    frame_data[5] = 0;")
+                        output.append("                    frame_data[4] = 0;")
+                        output.append("                    frame_data[5] = 0;")
                         output.append("                }")
                     else:
                         output.append(f"                frame_data[4] = (uint16_t)value_{signal_name}>>8 & 0xFF;")
                         output.append(f"                frame_data[5] = (uint16_t)value_{signal_name} & 0xFF;")
-                    output.append(f"                frame_len = 6;")
+                    output.append("                frame_len = 6;")
             else:
-                output.append(f"                // request 16bit value")
-                output.append(f"                frame_data[0] = {address};")
-                output.append(f"                frame_data[1] = {ctype};")
-                output.append(f"                frame_data[2] = {register[0]};")
-                output.append(f"                frame_data[3] = {register[1]};")
-                output.append(f"                frame_data[4] = {n_values[0]};")
-                output.append(f"                frame_data[5] = {n_values[1]};")
-                output.append(f"                frame_len = 6;")
+                if self.is_float:
+                    n_values = self.int2list(self.signal_values * 2)
+                    output.append("                // request 32bit float value")
+                    output.append(f"                frame_data[0] = {address};")
+                    output.append(f"                frame_data[1] = {ctype};")
+                    output.append(f"                frame_data[2] = {register[0]};")
+                    output.append(f"                frame_data[3] = {register[1]};")
+                    output.append(f"                frame_data[4] = {n_values[0]};")
+                    output.append(f"                frame_data[5] = {n_values[1]};")
+                    output.append("                frame_len = 6;")
+                else:
+                    output.append("                // request 16bit value")
+                    output.append(f"                frame_data[0] = {address};")
+                    output.append(f"                frame_data[1] = {ctype};")
+                    output.append(f"                frame_data[2] = {register[0]};")
+                    output.append(f"                frame_data[3] = {register[1]};")
+                    output.append(f"                frame_data[4] = {n_values[0]};")
+                    output.append(f"                frame_data[5] = {n_values[1]};")
+                    output.append("                frame_len = 6;")
             output.append("                break;")
             output.append("            }")
             sn += 1
@@ -632,3 +671,73 @@ class Plugin(PluginBase):
         output.append("            frame_len += 2;")
         output.append("        }")
         return "\n".join(output)
+
+    def testgui_frameio_init(self, layout):
+        from PyQt5.QtWidgets import (
+            QHBoxLayout,
+            QLabel,
+            QPushButton,
+            QTextEdit,
+        )
+
+        def pause_toggle():
+            if self.pause:
+                self.pause = False
+                self.button_pause.setText("PAUSE")
+            else:
+                self.pause = True
+                self.button_pause.setText("RESUME")
+
+        self.addrs = []
+        self.linebuffer = []
+        self.pause = False
+
+        row_layout = QHBoxLayout()
+        layout.addLayout(row_layout)
+
+        row_layout.addWidget(QLabel("Log"), stretch=1)
+        self.button_pause = QPushButton("PAUSE")
+        self.button_pause.clicked.connect(pause_toggle)
+        row_layout.addWidget(self.button_pause, stretch=1)
+        row_layout.addWidget(QLabel("Addresses (RX)"), stretch=1)
+
+        row_layout = QHBoxLayout()
+        layout.addLayout(row_layout)
+
+        self.widget_log = QTextEdit()
+        row_layout.addWidget(self.widget_log, stretch=2)
+
+        self.widget_addrs = QTextEdit()
+        row_layout.addWidget(self.widget_addrs, stretch=1)
+
+    def testgui_frameio_clean(self, txframe):
+        return txframe[:-2]
+
+    def testgui_frameio_send(self, txframe):
+        csum = crc16()
+        csum.update(txframe)
+        txframe += csum.intdigest()
+        return txframe
+
+    def testgui_frameio_update(self, send, frame):
+        if self.pause:
+            return
+
+        if send:
+            frame_tx_id = int(frame[0])
+            frame_tx_len = int(frame[1])
+            logline = f"> {frame_tx_id}: {' '.join(frame[2:frame_tx_len])}"
+            logline = f"> {' '.join(frame[2:frame_tx_len])}"
+        else:
+            frame_rx_id = int(frame[1])
+            frame_rx_len = int(frame[2])
+            frame_data = list(reversed(frame[3 : (frame_rx_len + 3)]))[:-2]
+            device_addrs = frame_data[0]
+            if device_addrs not in self.addrs:
+                self.addrs.append(device_addrs)
+            logline = f"< {frame_rx_id}: {' '.join(frame_data)}"
+            logline = f"< {' '.join(frame_data)}"
+
+        self.linebuffer = [logline] + self.linebuffer[:50]
+        self.widget_log.setPlainText("\n".join(self.linebuffer))
+        self.widget_addrs.setPlainText("\n".join(self.addrs))

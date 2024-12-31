@@ -1,7 +1,12 @@
 # max6675
+**SPI temperature sensor**
+
+to messurement very high temperatures of up to 1250 degrees Celsius
+
+Keywords: analog adc
 
 
-SPI temperature sensor
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,44 +27,40 @@ SPI temperature sensor
 ```
 
 ## Pins:
+*FPGA-pins*
 ### miso:
 
  * direction: input
- * pullup: False
 
 ### sclk:
 
  * direction: output
- * pullup: False
 
 ### sel:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### temperature:
 
  * type: float
  * direction: input
+ * unit: °C
 
 
 ## Interfaces:
+*transport layer*
 ### temperature:
 
  * size: 16 bit
@@ -71,7 +72,6 @@ target net in LinuxCNC
 {
     "type": "max6675",
     "name": "",
-    "net": "",
     "pins": {
         "miso": {
             "pin": "0",
@@ -115,4 +115,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * max6675.v
+ * [max6675.v](max6675.v)

@@ -1,4 +1,6 @@
 # shiftreg
+**Expansion to add I/O's via shiftregister's**
+
 
 do not use this for high frequency signals !!!
 
@@ -30,7 +32,10 @@ jitter measured with a EPM240 as 40bit Shiftreg:
 
         
 
-Expansion to add I/O's via shiftregister's
+Keywords: expansion digital io
+
+
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -54,28 +59,30 @@ Expansion to add I/O's via shiftregister's
 ```
 
 ## Pins:
+*FPGA-pins*
 ### out:
+output data (DS on 74HC595)
 
  * direction: output
- * pullup: False
 
 ### in:
+input data (SER_OUT on 74HC165)
 
  * direction: input
- * pullup: False
 
 ### sclk:
+input data (CLK on 74HC165/ CH_CP/SRCLK on 74HC595)
 
  * direction: output
- * pullup: False
 
 ### load:
+input data (SH/LD on 74HC165/ ST_CP/RCLK on 74HC595)
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### speed:
 interface clock
 
@@ -96,13 +103,15 @@ number of bits (IO's)
 name of this plugin instance
 
  * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 
 
 ## Interfaces:
+*transport layer*
 
 
 ## Full-Example:
@@ -154,4 +163,4 @@ name of this plugin instance
 ```
 
 ## Verilogs:
- * shiftreg.v
+ * [shiftreg.v](shiftreg.v)

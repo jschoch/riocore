@@ -4,19 +4,23 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "max7219"
+        self.INFO = "7segment display based on max7219"
+        self.KEYWORDS = "info display"
+        self.DESCRIPTION = "to display values from LinuxCNC on 7segment display's"
+        self.ORIGIN = ""
         self.VERILOGS = ["max7219.v"]
         self.PINDEFAULTS = {
             "mosi": {
                 "direction": "output",
-                "pullup": False,
+                "pull": None,
             },
             "sclk": {
                 "direction": "output",
-                "pullup": False,
+                "pull": None,
             },
             "sel": {
                 "direction": "output",
-                "pullup": False,
+                "pull": None,
             },
         }
         self.INTERFACE = {
@@ -48,15 +52,13 @@ class Plugin(PluginBase):
                 "description": "interface clock frequency",
             },
         }
-        self.INFO = "7segment display based on max7219"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
+        instance["predefines"]
         instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
+        instance["arguments"]
         brightness = self.plugin_setup.get("brightness", self.OPTIONS["brightness"]["default"])
         instance_parameter["BRIGHTNESS"] = f"8'h0{brightness:x}"
         frequency = int(self.plugin_setup.get("frequency", self.OPTIONS["frequency"]["default"]))

@@ -1,19 +1,55 @@
 import importlib
+import re
 import os
 import shutil
+import subprocess
 
 
 class Toolchain:
     def __init__(self, config):
         self.config = config
+        self.gateware_path = f"{self.config['output_path']}/Gateware"
+        self.riocore_path = config["riocore_path"]
+
+    def info(cls):
+        info = {
+            "url": "https://www.gowinsemi.com/en/support/home/",
+            "info": "Gowin EDA",
+            "description": "",
+            "install": """```### on Intel/AMD systems
+mkdir -p /opt/gowin
+cd /opt/gowin
+wget "https://cdn.gowinsemi.com.cn/Gowin_V1.9.9.03_Education_linux.tar.gz"
+tar xzvpf Gowin_V1.9.9.03_Education_linux.tar.gz
+rm -rf Gowin_V1.9.9.03_Education_linux.tar.gz
+```
+""",
+        }
+        return info
+
+    def pll(self, clock_in, clock_out):
+        if self.config["jdata"]["family"] == "GW1N-9C":
+            result = subprocess.check_output(
+                f"python3 {self.riocore_path}/files/gowin-pll.py -d 'GW1NR-9 C6/I5' -f '{self.gateware_path}/pll.v' -i {float(clock_in) / 1000000} -o {float(clock_out) / 1000000}", shell=True
+            )
+            achieved = re.findall(r"Achieved output frequency:\s*(\d*\.\d*)\s*MHz", result.decode())
+            if achieved:
+                new_speed = int(float(achieved[0]) * 1000000)
+                if new_speed != self.config["speed"]:
+                    print(f"WARNING: achieved PLL frequency is: {new_speed}")
+                    self.config["speed"] = new_speed
+        else:
+            print(f"WARNING: can not generate pll for this platform: set speed to: {clock_in} Hz")
+            self.config["speed"] = clock_in
 
     def generate(self, path):
-        pins_generator = importlib.import_module(f".pins", f"riocore.generator.pins.cst")
+        pins_generator = importlib.import_module(".pins", "riocore.generator.pins.cst")
         pins_generator.Pins(self.config).generate(path)
 
         gw_sh = shutil.which("gw_sh")
         if gw_sh is None:
             print("WARNING: can not found toolchain installation in PATH: gowin (gw_sh)")
+            print("  example: export PATH=$PATH:/opt/gowin/IDE/bin")
 
         verilogs = " ".join(self.config["verilog_files"])
 
@@ -34,49 +70,36 @@ class Toolchain:
         makefile_data.append(f"FAMILY   := {family}")
         makefile_data.append(f"FAMILY_GOWIN := {family_gowin}")
         makefile_data.append(f"DEVICE   := {ftype}")
+        makefile_data.append(f"CLK_SPEED := {float(self.config['speed']) / 1000000}")
         makefile_data.append(f"VERILOGS := {verilogs}")
         makefile_data.append("")
-        makefile_data.append("all: $(PROJECT).fs")
-        makefile_data.append("")
-        makefile_data.append(f"$(PROJECT).json: $(VERILOGS)")
-        makefile_data.append("	yosys -q -l yosys.log -p 'synth_gowin -noalu -nowidelut -top $(TOP) -json $(PROJECT).json' $(VERILOGS)")
-        makefile_data.append("")
-        makefile_data.append("$(PROJECT)_pnr.json: $(PROJECT).json pins.cst")
-        makefile_data.append(
-            f"	nextpnr-gowin --seed 0 --json $(PROJECT).json --write $(PROJECT)_pnr.json --freq {float(self.config['speed']) / 1000000} --enable-globals --enable-auto-longwires --device $(DEVICE) --cst pins.cst"
-        )
-        makefile_data.append("")
-        makefile_data.append("$(PROJECT).fs: $(PROJECT)_pnr.json")
-        makefile_data.append("	gowin_pack -d ${FAMILY} -o $(PROJECT).fs $(PROJECT)_pnr.json")
-        makefile_data.append("	cp -v hash_new.txt hash_compiled.txt")
-        makefile_data.append("")
-        makefile_data.append("load: $(PROJECT).fs")
-        makefile_data.append(f"	openFPGALoader -b {board.lower()} $(PROJECT).fs -f")
-        makefile_data.append("	cp -v hash_new.txt hash_flashed.txt")
+        makefile_data.append("all: impl/pnr/project.fs")
         makefile_data.append("")
         makefile_data.append("clean:")
-        makefile_data.append("	rm -rf $(PROJECT).fs $(PROJECT).json $(PROJECT)_pnr.json $(PROJECT).tcl abc.history impl yosys.log")
-        makefile_data.append("")
-        makefile_data.append("gowin_build: impl/pnr/project.fs")
+        makefile_data.append("	rm -rf $(PROJECT).fs $(PROJECT).json $(PROJECT)_pnr.json $(PROJECT).tcl abc.history impl")
         makefile_data.append("")
         makefile_data.append("$(PROJECT).tcl: pins.cst $(VERILOGS)")
         makefile_data.append('	@echo "set_device -name $(FAMILY_GOWIN) $(DEVICE)" > $(PROJECT).tcl')
-        makefile_data.append('	@for VAR in $?; do echo $$VAR | grep -s -q "\.v$$" && echo "add_file $$VAR" >> $(PROJECT).tcl; done')
+        makefile_data.append(r'	@for VAR in $?; do echo $$VAR | grep -s -q "\.v$$" && echo "add_file $$VAR" >> $(PROJECT).tcl; done')
+        makefile_data.append('	@echo "add_file rio.sdc" >> $(PROJECT).tcl')
         makefile_data.append('	@echo "add_file pins.cst" >> $(PROJECT).tcl')
         makefile_data.append('	@echo "set_option -top_module $(TOP)" >> $(PROJECT).tcl')
         makefile_data.append('	@echo "set_option -verilog_std v2001" >> $(PROJECT).tcl')
         makefile_data.append('	@echo "set_option -vhdl_std vhd2008" >> $(PROJECT).tcl')
         set_options = self.config.get(
             "set_options",
-            (
+            [
                 "use_sspi_as_gpio",
                 "use_mspi_as_gpio",
                 "use_done_as_gpio",
                 "use_ready_as_gpio",
                 "use_reconfign_as_gpio",
                 "use_i2c_as_gpio",
-            ),
+            ],
         )
+        if family in {"GW5A-25A", "GW5A-25B"}:
+            set_options.append("use_cpu_as_gpio")
+
         for set_option in set_options:
             makefile_data.append(f'	@echo "set_option -{set_option} 1" >> $(PROJECT).tcl')
         makefile_data.append('	@echo "run all" >> $(PROJECT).tcl')
@@ -84,13 +107,28 @@ class Toolchain:
         makefile_data.append("impl/pnr/project.fs: $(PROJECT).tcl")
         makefile_data.append("	gw_sh $(PROJECT).tcl")
         makefile_data.append("	cp -v hash_new.txt hash_compiled.txt")
+        makefile_data.append('	@grep -A 34 "3. Resource Usage Summary" impl/pnr/project.rpt.txt')
         makefile_data.append("")
-        makefile_data.append("gowin_load: impl/pnr/project.fs")
-        makefile_data.append(f"	openFPGALoader -b {board.lower()} impl/pnr/project.fs -f")
+        makefile_data.append("load: impl/pnr/project.fs")
+
+        board_id = board.lower()
+        if board_id == "tangoboard":
+            board_id = "tangnano9k"
+        makefile_data.append(f"	openFPGALoader -b {board_id} impl/pnr/project.fs -f")
         makefile_data.append("	cp -v hash_new.txt hash_flashed.txt")
         makefile_data.append("")
         makefile_data.append("")
         open(f"{path}/Makefile", "w").write("\n".join(makefile_data))
+
+        # generating timing constraints (.sdc)
+        speed_ns = 1000000000 / self.config["speed"]
+        sdc_data = [f"create_clock -period {speed_ns:0.3f} -waveform {{0.000 {speed_ns / 2:0.2f}}} -name sysclk_in [get_ports {{sysclk_in}}]"]
+        sdc_data.append("")
+        for key, value in self.config["timing_constraints"].items():
+            speed_ns = 1000000000 / int(value)
+            sdc_data.append(f"create_clock -period {speed_ns:0.3f} -waveform {{0.000 {speed_ns / 2:0.2f}}} -name {key} [get_ports {{{key}}}]")
+        sdc_data.append("")
+        open(f"{path}/rio.sdc", "w").write("\n".join(sdc_data))
 
         # generating project file for the gowin toolchain
         prj_data = []
@@ -101,6 +139,10 @@ class Toolchain:
         prj_data.append("    <Version>5</Version>")
         if family == "GW1N-9C":
             prj_data.append(f'    <Device name="{family_gowin}" pn="{ftype}">gw1nr9c-004</Device>')
+        elif family == "GW1N-9C7":
+            prj_data.append(f'    <Device name="{family_gowin}" pn="{ftype}">gw1nr9c-017</Device>')
+        elif family in {"GW5A-25A", "GW5A-25B"}:
+            prj_data.append(f'    <Device name="{family_gowin}" pn="{ftype}">gw5a25b-003</Device>')
         elif family == "GW2AR-18":
             prj_data.append('    <Device name="" pn="">gw2ar18c-000</Device>')
         elif family == "GW2A-18C":
@@ -115,7 +157,7 @@ class Toolchain:
         prj_data.append("</Project>")
         open(f"{path}/rio.gprj", "w").write("\n".join(prj_data))
 
-        os.system(f"mkdir -p {path}/impl")
+        os.makedirs(f"{path}/impl", exist_ok=True)
         pps_data = """{
  "Allow_Duplicate_Modules" : false,
  "Annotated_Properties_for_Analyst" : true,

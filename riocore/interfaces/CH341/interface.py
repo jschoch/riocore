@@ -1,5 +1,4 @@
 class Interface:
-
     DEFAULT_TIMEOUT = 1000  # 1000mS for USB timeouts
     BULK_WRITE_ENDPOINT = 0x02
     BULK_READ_ENDPOINT = 0x82
@@ -301,8 +300,8 @@ class Interface:
     ]
 
     def __init__(self, cstr):
-        vid = USB_VENDOR
-        pid = USB_PRODUCT
+        vid = self.USB_VENDOR
+        pid = self.USB_PRODUCT
 
         if cstr:
             (vid, pid) = cstr.split(":")

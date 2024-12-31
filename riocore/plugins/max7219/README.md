@@ -1,7 +1,12 @@
 # max7219
+**7segment display based on max7219**
+
+to display values from LinuxCNC on 7segment display's
+
+Keywords: info display
 
 
-7segment display based on max7219
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,23 +27,22 @@
 ```
 
 ## Pins:
+*FPGA-pins*
 ### mosi:
 
  * direction: output
- * pullup: False
 
 ### sclk:
 
  * direction: output
- * pullup: False
 
 ### sel:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### brightness:
 display brightness
 
@@ -59,16 +63,11 @@ interface clock frequency
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### value:
 
  * type: float
@@ -78,6 +77,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### value:
 
  * size: 24 bit
@@ -91,7 +91,6 @@ target net in LinuxCNC
     "brightness": 15,
     "frequency": 1000000,
     "name": "",
-    "net": "",
     "pins": {
         "mosi": {
             "pin": "0",
@@ -135,4 +134,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * max7219.v
+ * [max7219.v](max7219.v)

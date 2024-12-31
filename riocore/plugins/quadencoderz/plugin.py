@@ -4,30 +4,34 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "quadencoderz"
+        self.INFO = "quadencoder with index pin"
+        self.DESCRIPTION = "usable as spindle-encoder for rigid tapping and thread cutting"
+        self.KEYWORDS = "feedback encoder rotary linear glassscale  index"
+        self.ORIGIN = "https://www.fpga4fun.com/QuadratureDecoder.html"
         self.VERILOGS = ["quadencoderz.v"]
         self.PINDEFAULTS = {
             "a": {
                 "direction": "input",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
             "b": {
                 "direction": "input",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
             "z": {
                 "description": "index pin",
                 "direction": "input",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
         }
         self.OPTIONS = {
             "quad_type": {
                 "default": 2,
                 "type": int,
-                "min": 1,
+                "min": 0,
                 "max": 4,
                 "description": "encoder type",
             },
@@ -77,15 +81,13 @@ class Plugin(PluginBase):
                 "description": "calculates revolutions per minute",
             },
         }
-        self.INFO = "quadencoder with index pin"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
+        instance["predefines"]
         instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
+        instance["arguments"]
         quad_type = self.plugin_setup.get("quad_type", self.OPTIONS["quad_type"]["default"])
         instance_parameter["QUAD_TYPE"] = quad_type
         return instances

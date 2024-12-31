@@ -1,7 +1,12 @@
 # wled_bar
+**ws2812b interface for bar-displays**
+
+simple ws2812b driver with variable input to build led-bars
+
+Keywords: led rgb status info
 
 
-ws2812b interface for bar-displays
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,13 +21,14 @@ ws2812b interface for bar-displays
 ```
 
 ## Pins:
+*FPGA-pins*
 ### data:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### leds:
 number of LED's
 
@@ -43,16 +49,11 @@ LED brighness
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### value:
 
  * type: float
@@ -60,6 +61,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### value:
 
  * size: 8 bit
@@ -73,7 +75,6 @@ target net in LinuxCNC
     "leds": 12,
     "level": 127,
     "name": "",
-    "net": "",
     "pins": {
         "data": {
             "pin": "0",
@@ -101,5 +102,5 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * ws2812.v
- * wled_bar.v
+ * [ws2812.v](ws2812.v)
+ * [wled_bar.v](wled_bar.v)

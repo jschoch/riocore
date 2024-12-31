@@ -1,7 +1,12 @@
 # freqin
+**frequency input**
+
+to messurement digital frequencies
+
+Keywords: frequency
 
 
-frequency input
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,13 +21,14 @@ frequency input
 ```
 
 ## Pins:
+*FPGA-pins*
 ### freq:
 
  * direction: input
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### freq_min:
 minimum measured frequency (for faster updates)
 
@@ -36,20 +42,16 @@ minimum measured frequency (for faster updates)
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### frequency:
 
  * type: float
  * direction: input
+ * unit: Hz
 
 ### valid:
 
@@ -58,6 +60,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### frequency:
 
  * size: 32 bit
@@ -75,7 +78,6 @@ target net in LinuxCNC
     "type": "freqin",
     "freq_min": 10,
     "name": "",
-    "net": "",
     "pins": {
         "freq": {
             "pin": "0",
@@ -112,4 +114,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * freqin.v
+ * [freqin.v](freqin.v)

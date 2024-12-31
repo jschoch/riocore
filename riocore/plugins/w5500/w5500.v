@@ -1,10 +1,12 @@
 
+
 module w5500
     #(
          parameter BUFFER_SIZE=16'd64,
          parameter MSGID=32'h74697277,
-         parameter TIMEOUT=32'd4800000,
          parameter IP_ADDR={8'd192, 8'd168, 8'd10, 8'd194},
+         parameter NET_MASK={8'd255, 8'd255, 8'd255, 8'd0},
+         parameter GW_ADDR={8'd192, 8'd168, 8'd10, 8'd1},
          parameter MAC_ADDR={8'hAA, 8'hAF, 8'hFA, 8'hCC, 8'hE3, 8'h1C},
          parameter PORT=2390,
          parameter DIVIDER=3
@@ -15,15 +17,15 @@ module w5500
          input miso,
          output sclk,
          output sel,
+         input intr,
+         output reg rst = 1,
          input [BUFFER_SIZE-1:0] tx_data,
          output [BUFFER_SIZE-1:0] rx_data,
-         output reg sync = 0,
-         output reg pkg_timeout = 0
+         output reg sync = 0
      );
-    reg [31:0] timeout_counter = 0;
 
-
-    reg [31:0] clk_counter = 0;
+    localparam DIVIDER_BITS = clog2(DIVIDER + 1);
+    reg [DIVIDER_BITS:0] clk_counter = 0;
     reg mclk = 0;
     always @(posedge clk) begin
         if (clk_counter == 0) begin
@@ -36,7 +38,7 @@ module w5500
 
     wire data_output_valid;
 
-    reg [15:0] counter = 16'd0;
+    reg send_flag = 0;
     reg flush_requested = 1'b0;
     reg [BUFFER_SIZE-1:0] data_to_ethernet = 0;
     reg data_out_valid = 1'b0;
@@ -51,25 +53,17 @@ module w5500
         sync <= 0;
         if (data_output_valid == 1) begin
             do_transmit <= 1;
-            timeout_counter <= 0;
-            pkg_timeout <= 0;
             sync <= 1;
         end else begin
-            if (timeout_counter < TIMEOUT) begin
-                timeout_counter <= timeout_counter + 1;
-                pkg_timeout <= 0;
-            end else begin
-                pkg_timeout <= 1;
-            end
             if (do_transmit == 1) begin
                 if (ethernet_available) begin
-                    if (counter < 1) begin
+                    if (send_flag == 0) begin
                         data_to_ethernet <= tx_data;
                         data_out_valid <= 1'b1;
-                        counter <= counter + 1'b1;
+                        send_flag <= 1;
                     end else begin
                         flush_requested <= 1'b1;
-                        counter <= 0;
+                        send_flag <= 0;
                     end
                 end else begin
                     data_out_valid <= 1'b0;
@@ -82,7 +76,7 @@ module w5500
         end
     end
 
-    wiznet5500 #(.IP_ADDR(IP_ADDR), .MAC_ADDR(MAC_ADDR), .PORT(PORT), .BUFFER_SIZE_RX(BUFFER_SIZE), .BUFFER_SIZE_TX(BUFFER_SIZE), .MSGID(MSGID)) eth_iface (
+    wiznet5500 #(.IP_ADDR(IP_ADDR), .NET_MASK(NET_MASK), .GW_ADDR(GW_ADDR), .MAC_ADDR(MAC_ADDR), .PORT(PORT), .BUFFER_SIZE_RX(BUFFER_SIZE), .BUFFER_SIZE_TX(BUFFER_SIZE), .MSGID(MSGID)) eth_iface (
                    .clk(mclk),
                    .miso(miso),
                    .mosi(mosi),
@@ -111,6 +105,8 @@ endmodule
 module wiznet5500
     #(
          parameter IP_ADDR = {8'd192, 8'd168, 8'd10, 8'd194},
+         parameter NET_MASK={8'd255, 8'd255, 8'd255, 8'd0},
+         parameter GW_ADDR={8'd192, 8'd168, 8'd10, 8'd1},
          parameter MAC_ADDR = {8'hAA, 8'hAF, 8'hFA, 8'hCC, 8'hE3, 8'h1C},
          parameter PORT = 2390,
          parameter BUFFER_SIZE_RX = 192,
@@ -167,16 +163,16 @@ module wiznet5500
     localparam SET_SOURCE_IP_ADDRESS_3  =  {8'h00, 8'b00010010, WRITE_REG};
 
     // Set/read out gateway address.
-    localparam SET_GATEWAY_ADDRESS_0    = {8'h00, 8'b00000001, WRITE_REG, 8'd192};
-    localparam SET_GATEWAY_ADDRESS_1    = {8'h00, 8'b00000010, WRITE_REG, 8'd168};
-    localparam SET_GATEWAY_ADDRESS_2    = {8'h00, 8'b00000011, WRITE_REG, 8'd10};
-    localparam SET_GATEWAY_ADDRESS_3    = {8'h00, 8'b00000100, WRITE_REG, 8'd1};
+    localparam SET_GATEWAY_ADDRESS_0    = {8'h00, 8'b00000001, WRITE_REG};
+    localparam SET_GATEWAY_ADDRESS_1    = {8'h00, 8'b00000010, WRITE_REG};
+    localparam SET_GATEWAY_ADDRESS_2    = {8'h00, 8'b00000011, WRITE_REG};
+    localparam SET_GATEWAY_ADDRESS_3    = {8'h00, 8'b00000100, WRITE_REG};
 
     // Set/read out subnet mask.
-    localparam SET_SUBNET_MASK_0  = {8'h00, 8'b00000101, WRITE_REG, 8'd255};
-    localparam SET_SUBNET_MASK_1  = {8'h00, 8'b00000110, WRITE_REG, 8'd255};
-    localparam SET_SUBNET_MASK_2  = {8'h00, 8'b00000111, WRITE_REG, 8'd255};
-    localparam SET_SUBNET_MASK_3  = {8'h00, 8'b00001000, WRITE_REG, 8'd0};
+    localparam SET_SUBNET_MASK_0  = {8'h00, 8'b00000101, WRITE_REG};
+    localparam SET_SUBNET_MASK_1  = {8'h00, 8'b00000110, WRITE_REG};
+    localparam SET_SUBNET_MASK_2  = {8'h00, 8'b00000111, WRITE_REG};
+    localparam SET_SUBNET_MASK_3  = {8'h00, 8'b00001000, WRITE_REG};
 
     // Set the socket mode to UDP with no blocking
     localparam SET_SOCKET_0_MODE  = {16'h0000, WRITE_S0, 8'b00000010};
@@ -258,10 +254,13 @@ module wiznet5500
 `endif
 
     reg [31:0] local_ip = IP_ADDR;
+    reg [31:0] local_gw = GW_ADDR;
+    reg [31:0] net_mask = NET_MASK;
     reg [31:0] dst_ip = {8'd192, 8'd168, 8'd10, 8'd0};
     reg [15:0] dst_port = 16'd2390;
     reg [10:0] rx_size = 11'd0;
     reg [3:0] rx_timer = 4'd0;
+    reg [3:0] rx_checks = 4'd0;
     reg rx_buffer_valid = 0;
     reg [15:0] tx_buffer_write_pointer = 16'd0;
     reg [15:0] rx_buffer_read_pointer = 16'd0;
@@ -306,6 +305,7 @@ module wiznet5500
 
         end else if (state == STATE_RX_START) begin
             rx_buffer_read_pointer <= rx_buffer_read_pointer + data_read[7:0];
+
             if (rx_size == (BUFFER_SIZE_RX+HEADER_SIZE)) begin
                 rx_buffer_valid <= 1;
                 current_instruction <= {8'd0, rx_buffer_read_pointer, BSB_S0_RX_RWB_READ};
@@ -455,16 +455,16 @@ module wiznet5500
                 10: current_instruction <= {SET_SOURCE_IP_ADDRESS_3, local_ip[7:0]};
 
                 // Set the gateway address
-                11: current_instruction <= SET_GATEWAY_ADDRESS_0;
-                12: current_instruction <= SET_GATEWAY_ADDRESS_1;
-                13: current_instruction <= SET_GATEWAY_ADDRESS_2;
-                14: current_instruction <= SET_GATEWAY_ADDRESS_3;
+                11: current_instruction <= {SET_GATEWAY_ADDRESS_0, local_gw[31:24]};
+                12: current_instruction <= {SET_GATEWAY_ADDRESS_1, local_gw[23:16]};
+                13: current_instruction <= {SET_GATEWAY_ADDRESS_2, local_gw[15:8]};
+                14: current_instruction <= {SET_GATEWAY_ADDRESS_3, local_gw[7:0]};
 
                 // Set the subnet mask
-                15: current_instruction <= SET_SUBNET_MASK_0;
-                16: current_instruction <= SET_SUBNET_MASK_1;
-                17: current_instruction <= SET_SUBNET_MASK_2;
-                18: current_instruction <= SET_SUBNET_MASK_3;
+                15: current_instruction <= {SET_SUBNET_MASK_0, net_mask[31:24]};
+                16: current_instruction <= {SET_SUBNET_MASK_1, net_mask[23:16]};
+                17: current_instruction <= {SET_SUBNET_MASK_2, net_mask[15:8]};
+                18: current_instruction <= {SET_SUBNET_MASK_3, net_mask[7:0]};
 
                 // Set socket 0's mode
                 19: current_instruction <= SET_SOCKET_0_MODE;
@@ -550,10 +550,20 @@ module wiznet5500
                 if (is_check_rx == 1) begin
                     is_busy <= 1'b0;
                     is_check_rx <= 0;
-                    rx_timer <= 0;
+                    rx_timer <= 4'd0;
                     rx_size <= {data_read[7:0], 3'd0};
-                    if (data_read[7:0] > 8'b0) begin
+                    if (data_read[7:0] >= (BUFFER_SIZE_RX+HEADER_SIZE)) begin
+                        rx_checks <= 4'd0;
                         state <= STATE_RX_START;
+                    end else if (data_read[7:0] > 8'd0) begin
+                        // if package size is not valid, recheck rx-buffer 10 times
+                        if (rx_checks > 4'd9) begin
+                            // valid package size will not reached, clear the buffers
+                            rx_checks <= 4'd0;
+                            state <= STATE_RX_START;
+                        end else begin
+                            rx_checks <= rx_checks + 4'd1;
+                        end
                     end
                 end else begin
                     spi_clk <= 1'b0;

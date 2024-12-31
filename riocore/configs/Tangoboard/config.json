@@ -1,0 +1,313 @@
+{
+    "name": "Tangoboard",
+    "description": "Tangoboard with TangNano9K over SPI",
+    "boardcfg": "Tangoboard",
+    "protocol": "SPI",
+    "plugins": [
+        {
+            "type": "bitout",
+            "name": "out1",
+            "pins": {
+                "bit": {
+                    "pin": "OUT1:BIT",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitout",
+            "name": "out2",
+            "pins": {
+                "bit": {
+                    "pin": "OUT2:BIT",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitout",
+            "pins": {
+                "bit": {
+                    "pin": "OUT3:BIT",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitout",
+            "pins": {
+                "bit": {
+                    "pin": "OUT4:BIT",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitout",
+            "pins": {
+                "bit": {
+                    "pin": "OUT5:BIT",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "name": "home-x",
+            "pins": {
+                "bit": {
+                    "pin": "IN1:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            },
+            "signals": {
+                "bit": {
+                    "net": "joint.0.home-sw-in"
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "name": "home-y",
+            "pins": {
+                "bit": {
+                    "pin": "IN2:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            },
+            "signals": {
+                "bit": {
+                    "net": "joint.1.home-sw-in"
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "name": "home-z",
+            "pins": {
+                "bit": {
+                    "pin": "IN3:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            },
+            "signals": {
+                "bit": {
+                    "net": "joint.2.home-sw-in"
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "name": "tool-probe",
+            "pins": {
+                "bit": {
+                    "pin": "IN4:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            },
+            "signals": {
+                "bit": {
+                    "net": "motion.probe-input"
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "pins": {
+                "bit": {
+                    "pin": "IN5:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "pins": {
+                "bit": {
+                    "pin": "IN6:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "pins": {
+                "bit": {
+                    "pin": "IN7:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "bitin",
+            "pins": {
+                "bit": {
+                    "pin": "IN8:BIT",
+                    "pull": "up",
+                    "modifier": [
+                        {
+                            "type": "invert"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "stepdir",
+            "scale": -800,
+            "pins": {
+                "step": {
+                    "pin": "JOINT1:STEP"
+                },
+                "dir": {
+                    "pin": "JOINT1:DIR"
+                }
+            },
+            "is_joint": true
+        },
+        {
+            "type": "stepdir",
+            "scale": -800,
+            "pins": {
+                "step": {
+                    "pin": "JOINT2:STEP"
+                },
+                "dir": {
+                    "pin": "JOINT2:DIR"
+                }
+            },
+            "is_joint": true
+        },
+        {
+            "type": "stepdir",
+            "scale": -1600,
+            "pins": {
+                "step": {
+                    "pin": "JOINT3:STEP"
+                },
+                "dir": {
+                    "pin": "JOINT3:DIR"
+                }
+            },
+            "is_joint": true
+        },
+        {
+            "type": "stepdir",
+            "pins": {
+                "step": {
+                    "pin": "JOINT4:STEP"
+                },
+                "dir": {
+                    "pin": "JOINT4:DIR"
+                }
+            },
+            "is_joint": true
+        },
+        {
+            "type": "stepdir",
+            "pins": {
+                "step": {
+                    "pin": "JOINT5:STEP"
+                },
+                "dir": {
+                    "pin": "JOINT5:DIR"
+                }
+            },
+            "is_joint": true
+        },
+        {
+            "type": "spi",
+            "pins": {
+                "mosi": {
+                    "pin": "SPI:MOSI"
+                },
+                "miso": {
+                    "pin": "SPI:MISO"
+                },
+                "sclk": {
+                    "pin": "SPI:SCLK"
+                },
+                "sel": {
+                    "pin": "SPI:SEL"
+                }
+            }
+        },
+        {
+            "type": "pwmout",
+            "pins": {
+                "pwm": {
+                    "pin": "AUX:PWM"
+                },
+                "dir": {
+                    "pin": "AUX:DIR"
+                },
+                "en": {
+                    "pin": "AUX:EN"
+                }
+            },
+            "signals": {
+                "dty": {
+                    "net": "spindle.0.speed-out"
+                },
+                "enable": {
+                    "net": "spindle.0.on"
+                }
+            }
+        }
+    ]
+}

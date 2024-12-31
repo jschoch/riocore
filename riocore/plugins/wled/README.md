@@ -1,7 +1,12 @@
 # wled
+**ws2812b interface**
+
+simple ws2812b led driver / you can only turn on/off each color (R/G/B) of each led
+
+Keywords: led rgb status info
 
 
-ws2812b interface
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,13 +21,14 @@ ws2812b interface
 ```
 
 ## Pins:
+*FPGA-pins*
 ### data:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### leds:
 number of LED's
 
@@ -43,16 +49,11 @@ LED brighness
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### 0_green:
 
  * type: bit
@@ -70,6 +71,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### 0_green:
 
  * size: 1 bit
@@ -93,7 +95,6 @@ target net in LinuxCNC
     "leds": 1,
     "level": 127,
     "name": "",
-    "net": "",
     "pins": {
         "data": {
             "pin": "0",
@@ -137,5 +138,5 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * ws2812.v
- * wled.v
+ * [ws2812.v](ws2812.v)
+ * [wled.v](wled.v)

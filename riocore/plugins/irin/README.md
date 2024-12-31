@@ -1,7 +1,12 @@
 # irin
+**IR-Remote input**
+
+that was just a gimmick, not really useful
+
+Keywords: remote control keyboard
 
 
-IR-Remote input
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,27 +21,23 @@ IR-Remote input
 ```
 
 ## Pins:
+*FPGA-pins*
 ### ir:
 
  * direction: input
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### code:
 
  * type: float
@@ -44,6 +45,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### code:
 
  * size: 8 bit
@@ -55,7 +57,6 @@ target net in LinuxCNC
 {
     "type": "irin",
     "name": "",
-    "net": "",
     "pins": {
         "ir": {
             "pin": "0",
@@ -83,4 +84,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * irin.v
+ * [irin.v](irin.v)

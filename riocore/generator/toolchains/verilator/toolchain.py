@@ -5,9 +5,19 @@ import shutil
 class Toolchain:
     def __init__(self, config):
         self.config = config
+        self.gateware_path = f"{self.config['output_path']}/Gateware"
+        self.riocore_path = config["riocore_path"]
+
+    def info(cls):
+        info = {
+            "url": "https://www.veripool.org/verilator/",
+            "info": "verilog simulation",
+            "description": "",
+        }
+        return info
 
     def generate(self, path):
-        pins_generator = importlib.import_module(f".pins", f"riocore.generator.pins.qdf")
+        pins_generator = importlib.import_module(".pins", "riocore.generator.pins.qdf")
         pins_generator.Pins(self.config).generate(path)
         verilator = shutil.which("verilator")
         if verilator is None:
@@ -20,6 +30,7 @@ class Toolchain:
         makefile_data.append("PROJECT   := rio")
         makefile_data.append("TOP       := rio")
         makefile_data.append(f"VERILOGS  := {verilogs}")
+        makefile_data.append(f"CLK_SPEED := {float(self.config['speed']) / 1000000}")
         makefile_data.append("")
         makefile_data.append("all: obj_dir/V$(TOP)")
         makefile_data.append("")

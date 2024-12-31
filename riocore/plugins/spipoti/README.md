@@ -1,7 +1,12 @@
 # spipoti
+**spi digital poti**
+
+Analog-Outout via spi digital poti
+
+Keywords: analog poti dac
 
 
-spi analog-poti
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,37 +27,31 @@ spi analog-poti
 ```
 
 ## Pins:
+*FPGA-pins*
 ### mosi:
 
  * direction: output
- * pullup: False
 
 ### sclk:
 
  * direction: output
- * pullup: False
 
 ### sel:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### value:
 
  * type: float
@@ -60,6 +59,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### value:
 
  * size: 8 bit
@@ -71,7 +71,6 @@ target net in LinuxCNC
 {
     "type": "spipoti",
     "name": "",
-    "net": "",
     "pins": {
         "mosi": {
             "pin": "0",
@@ -115,4 +114,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * spipoti.v
+ * [spipoti.v](spipoti.v)

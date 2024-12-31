@@ -1,7 +1,12 @@
 # freqout
+**frequency output**
+
+to output variable frequency signals
+
+Keywords: frequency
 
 
-frequency output
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,27 +21,23 @@ frequency output
 ```
 
 ## Pins:
+*FPGA-pins*
 ### freq:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### frequency:
 output frequency
 
@@ -44,9 +45,11 @@ output frequency
  * direction: output
  * min: 0
  * max: 1000000
+ * unit: Hz
 
 
 ## Interfaces:
+*transport layer*
 ### frequency:
 
  * size: 32 bit
@@ -58,7 +61,6 @@ output frequency
 {
     "type": "freqout",
     "name": "",
-    "net": "",
     "pins": {
         "freq": {
             "pin": "0",
@@ -86,4 +88,4 @@ output frequency
 ```
 
 ## Verilogs:
- * freqout.v
+ * [freqout.v](freqout.v)

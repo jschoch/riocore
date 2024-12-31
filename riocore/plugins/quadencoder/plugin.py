@@ -4,23 +4,36 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "quadencoder"
+        self.INFO = "quadencoder"
+        self.DESCRIPTION = "usable as position feedback for closed-loop configuration or as variable input to control LinuxCNC overwrites"
+        self.KEYWORDS = "feedback encoder rotary linear glassscale"
+        self.ORIGIN = "https://www.fpga4fun.com/QuadratureDecoder.html"
         self.VERILOGS = ["quadencoder.v"]
         self.PINDEFAULTS = {
             "a": {
                 "direction": "input",
                 "invert": False,
-                "pullup": True,
+                "pull": "up",
             },
             "b": {
                 "direction": "input",
                 "invert": False,
-                "pullup": True,
+                "pull": "up",
             },
         }
         self.INTERFACE = {
             "position": {
                 "size": 32,
                 "direction": "input",
+            },
+        }
+        self.OPTIONS = {
+            "quad_type": {
+                "default": 2,
+                "type": int,
+                "min": 0,
+                "max": 4,
+                "description": "encoder type",
             },
         }
         self.SIGNALS = {
@@ -43,8 +56,6 @@ class Plugin(PluginBase):
                 "description": "calculates revolutions per minute",
             },
         }
-        self.INFO = "quadencoder"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()

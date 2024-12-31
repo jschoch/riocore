@@ -2,9 +2,8 @@ import time
 
 
 class Modifiers:
-    def pin_modifier_debounce_input(self, instances, modifier_num, pin_name, pin_varname):
-        # width = modifier.get("delay", 16)
-        width = 16
+    def pin_modifier_debounce(self, instances, modifier_num, pin_name, pin_varname, modifier, system_setup):
+        width = modifier.get("delay", 16)
         instances[f"debouncer{modifier_num}_{self.instances_name}_{pin_name}"] = {
             "module": "debouncer",
             "parameter": {"WIDTH": width},
@@ -18,7 +17,7 @@ class Modifiers:
         pin_varname = f"{pin_varname}_DEBOUNCED"
         return pin_varname
 
-    def pin_modifier_toggle_input(self, instances, modifier_num, pin_name, pin_varname):
+    def pin_modifier_toggle(self, instances, modifier_num, pin_name, pin_varname, modifier, system_setup):
         instances[f"toggle{modifier_num}_{self.instances_name}_{pin_name}"] = {
             "module": "toggle",
             "arguments": {
@@ -31,7 +30,7 @@ class Modifiers:
         pin_varname = f"{pin_varname}_TOGGLED"
         return pin_varname
 
-    def pin_modifier_invert_input(self, instances, modifier_num, pin_name, pin_varname):
+    def pin_modifier_invert(self, instances, modifier_num, pin_name, pin_varname, modifier, system_setup):
         instances[f"invert{modifier_num}_{self.instances_name}_{pin_name}"] = {
             "predefines": [
                 f"wire {pin_varname}_INVERTED;",
@@ -41,69 +40,41 @@ class Modifiers:
         pin_varname = f"{pin_varname}_INVERTED"
         return pin_varname
 
-    def pin_modifier_onerror_input(self, instances, modifier_num, pin_name, pin_varname):
+    def pin_modifier_onerror(self, instances, modifier_num, pin_name, pin_varname, modifier, system_setup):
+        invert = modifier.get("invert", False)
+        invert_char = "~"
+        if invert:
+            invert_char = ""
         instances[f"onerror{modifier_num}_{self.instances_name}_{pin_name}"] = {
             "predefines": [
                 f"wire {pin_varname}_ONERROR;",
-                f"assign {pin_varname}_ONERROR = {pin_varname} & ~ERROR;",
+                f"assign {pin_varname}_ONERROR = {pin_varname} & {invert_char}ERROR;",
             ],
         }
         pin_varname = f"{pin_varname}_ONERROR"
         return pin_varname
 
-    def pin_modifier_debounce_output(self, instances, modifier_num, pin_name, pin_varname):
-        # width = modifier.get("delay", 16)
-        width = 16
-        instances[f"debouncer{modifier_num}_{self.instances_name}_{pin_name}"] = {
-            "module": "debouncer",
-            "parameter": {"WIDTH": width},
+    def pin_modifier_pwm(self, instances, modifier_num, pin_name, pin_varname, modifier, system_setup):
+        frequency = modifier.get("frequency", 1)
+        dty = modifier.get("dty", 50)
+        frequency_divider = system_setup["speed"] // frequency
+        dty_divider = frequency_divider * dty // 100
+        instances[f"pwm{modifier_num}_{self.instances_name}_{pin_name}"] = {
+            "module": "pwmmod",
+            "parameter": {"DIVIDER_FREQ": frequency_divider, "DIVIDER_DTY": dty_divider},
             "arguments": {
                 "clk": "sysclk",
-                "din": f"{pin_varname}_DEBOUNCE",
-                "dout": pin_varname,
+                "din": pin_varname,
+                "dout": f"{pin_varname}_PWM",
             },
-            "predefines": [f"wire {pin_varname}_DEBOUNCE;"],
         }
-        pin_varname = f"{pin_varname}_DEBOUNCE"
-        return pin_varname
-
-    def pin_modifier_toggle_output(self, instances, modifier_num, pin_name, pin_varname):
-        instances[f"toggle{modifier_num}_{self.instances_name}_{pin_name}"] = {
-            "module": "toggle",
-            "arguments": {
-                "clk": "sysclk",
-                "din": f"{pin_varname}_TOGGLE",
-                "dout": pin_varname,
-            },
-            "predefines": [f"wire {pin_varname}_TOGGLE;"],
-        }
-        pin_varname = f"{pin_varname}_TOGGLE"
-        return pin_varname
-
-    def pin_modifier_invert_output(self, instances, modifier_num, pin_name, pin_varname):
-        instances[f"invert{modifier_num}_{self.instances_name}_{pin_name}"] = {
-            "predefines": [
-                f"wire {pin_varname}_INVERT;",
-                f"assign {pin_varname} = ~{pin_varname}_INVERT;",
-            ],
-        }
-        pin_varname = f"{pin_varname}_INVERT"
-        return pin_varname
-
-    def pin_modifier_onerror_output(self, instances, modifier_num, pin_name, pin_varname):
-        instances[f"onerror{modifier_num}_{self.instances_name}_{pin_name}"] = {
-            "predefines": [
-                f"wire {pin_varname}_ONERROR;",
-                f"assign {pin_varname} = {pin_varname}_ONERROR & ~ERROR;",
-            ],
-        }
-        pin_varname = f"{pin_varname}_ONERROR"
+        pin_varname = f"{pin_varname}_PWM"
         return pin_varname
 
     def pin_modifier_list(self, direction=None):
         modifiers = []
         for part in dir(self):
-            if part.startswith("pin_modifier_") and (not direction or part.endswith(f"_{direction}")):
+            if part.startswith("pin_modifier_") and part != "pin_modifier_list":
                 modifiers.append(part.split("_")[2])
         return modifiers
 
@@ -115,14 +86,20 @@ class PluginBase:
         self.PINDEFAULTS = {}
         self.INTERFACE = {}
         self.SIGNALS = {}
+        self.TIMING_CONSTRAINTS = {}
         self.DYNAMIC_SIGNALS = False
         self.VERILOGS = []
         self.NAME = ""
         self.TYPE = "io"
         self.INFO = ""
         self.DESCRIPTION = ""
+        self.KEYWORDS = ""
+        self.ORIGIN = ""
+        self.GATEWARE_SUPPORT = True
+        self.FIRMWARE_SUPPORT = False
         self.OPTIONS = {}
         self.PLUGIN_CONFIG = False
+        self.LIMITATIONS = {}
         self.system_setup = system_setup
         self.plugin_id = plugin_id
         self.plugin_setup = plugin_setup
@@ -138,11 +115,14 @@ class PluginBase:
             self.txframe_id = 0
             self.txdata = 0
             self.frame = b""
+            self.frame_tx = None
+            self.frame_tx_overwride = None
 
         if "name" not in self.OPTIONS:
             self.OPTIONS["name"] = {
                 "type": str,
                 "description": "name of this plugin instance",
+                "default": "",
             }
 
         if self.TYPE == "joint":
@@ -159,13 +139,26 @@ class PluginBase:
                     "description": "configure as joint",
                 }
 
-        self.instances_name = f"{self.NAME}{self.plugin_id}"
-        self.title = plugin_setup.get("name") or self.instances_name
+        self.update_title()
 
         if self.TYPE == "expansion":
             expansion_id = len(self.expansions)
-            self.expansion_prefix = self.plugin_setup.get("name", f"EXPANSION{expansion_id}")
+            ename = (self.plugin_setup.get("name") or f"EXPANSION{expansion_id}").replace(" ", "_")
+            self.expansion_prefix = ename.upper()
             self.expansions.append(self.expansion_prefix)
+
+    def update_title(self):
+        self.instances_name = f"{self.NAME}{self.plugin_id}"
+        self.title = self.plugin_setup.get("name") or self.instances_name
+
+    def firmware_defines(self):
+        return ""
+
+    def firmware_setup(self):
+        return ""
+
+    def firmware_loop(self):
+        return ""
 
     def setup(self):
         pass
@@ -190,7 +183,13 @@ class PluginBase:
                     self.txframe_id += 1
                 else:
                     self.txframe_id = 0
+
                 txdata = self.frameio_tx(frame_ack, frame_timeout)
+
+                if self.frame_tx_overwride is not None:
+                    txdata = self.frame_tx_overwride
+                self.frame_tx = txdata
+
                 if txdata is not None:
                     frame_len = len(txdata)
                     data = [0] * (self.plugin_setup.get("tx_buffersize", self.OPTIONS["tx_buffersize"]["default"]) // 8)
@@ -202,7 +201,7 @@ class PluginBase:
         else:
             interface_data = self.interface_data()
             for signal_name, signal_setup in self.signals().items():
-                if signal_setup["direction"] in {"output", "input", "inout"} and signal_name in interface_data:
+                if signal_setup["direction"] in {"output", "inout"} and signal_name in interface_data:
                     interface_data[signal_name]["value"] = self.convert(signal_name, signal_setup, signal_setup["value"])
 
     def convert2signals(self):
@@ -232,6 +231,9 @@ class PluginBase:
     def convert_c(self, signal_name, signal_setup):
         return ""
 
+    def timing_constraints(self):
+        return self.TIMING_CONSTRAINTS
+
     def pins(self):
         pins = {}
         for pin_name, pin_config in self.PINDEFAULTS.items():
@@ -240,7 +242,7 @@ class PluginBase:
                 self.plugin_setup["pins"] = {pin_name: {"pin": self.plugin_setup["pin"]}}
 
             if "pins" not in self.plugin_setup:
-                print(f"WARNING: no pins found in config ({self.instances_name})")
+                # print(f"WARNING: no pins found in config ({self.instances_name})")
                 continue
 
             if pin_name.upper() in self.plugin_setup["pins"]:
@@ -260,7 +262,7 @@ class PluginBase:
                 pins[pin_name]["varname"] = f"PIN{direction}_{self.instances_name}_{pin_name}".upper()
             elif pin_config.get("optional") is not True:
                 print(f"ERROR: MISSING PIN CONFIGURATION for '{pin_name}' ({self.NAME})")
-                #exit(1)
+                # exit(1)
             else:
                 pins[pin_name] = pin_config.copy()
                 pins[pin_name]["varname"] = f"UNUSED_PIN_{self.instances_name}_{pin_name}".upper()
@@ -275,7 +277,7 @@ class PluginBase:
             for key in setup:
                 if key in self.plugin_setup:
                     setup[key] = self.plugin_setup[key]
-            signal_prefix = self.plugin_setup.get("name", self.instances_name)
+            signal_prefix = (self.plugin_setup.get("name") or self.instances_name).replace(" ", "_")
             halname = f"{signal_prefix}.{name}"
             direction_short = setup["direction"].upper().replace("PUT", "")
             signals[name]["signal_prefix"] = signal_prefix
@@ -299,8 +301,29 @@ class PluginBase:
             size = setup.get("size", 32)
             direction = setup["direction"].upper().replace("PUT", "")
             data[name] = setup
+
+            multiplexed = self.plugin_setup.get("multiplexed")
+            if multiplexed is not None:
+                data[name]["multiplexed"] = multiplexed
+
             data[name]["variable"] = f"VAR{direction}{size}_{self.instances_name}_{name}".upper()
         return data
+
+    def expansion_outputs(self):
+        expansion_pins = []
+        if self.TYPE == "expansion":
+            bits = self.plugin_setup.get("bits", 8)
+            for num in range(0, bits):
+                expansion_pins.append(f"{self.expansion_prefix}_OUTPUT[{num}]")
+        return expansion_pins
+
+    def expansion_inputs(self):
+        expansion_pins = []
+        if self.TYPE == "expansion":
+            bits = self.plugin_setup.get("bits", 8)
+            for num in range(0, bits):
+                expansion_pins.append(f"{self.expansion_prefix}_INPUT[{num}]")
+        return expansion_pins
 
     def gateware_defines(self, direct=False):
         defines = []
@@ -312,15 +335,25 @@ class PluginBase:
 
     def gateware_pin_modifiers(self, instances, instance, pin_name, pin_config, pin_varname):
         instance_predefines = instance["predefines"]
-        instance_arguments = instance["arguments"]
         direction = pin_config["direction"]
-        for modifier_num, modifier in enumerate(pin_config.get("modifier", [])):
+        modifier_list = pin_config.get("modifier", [])
+        pin_varname_org = pin_varname
+        if direction == "output":
+            instance_predefines.append(f"wire {pin_varname_org}_RAW;")
+            pin_varname = f"{pin_varname_org}_RAW"
+        for modifier_num, modifier in enumerate(modifier_list):
             if modifier:
                 modifier_type = modifier["type"]
-                modifier_function = getattr(Modifiers, f"pin_modifier_{modifier_type}_{direction}")
+                modifier_function = getattr(Modifiers, f"pin_modifier_{modifier_type}")
                 if modifier_function:
-                    pin_varname = modifier_function(self, instances, modifier_num, pin_name, pin_varname)
-
+                    pin_varname = modifier_function(self, instances, modifier_num, pin_name, pin_varname, modifier, self.system_setup)
+        if direction == "output":
+            instances[f"{self.instances_name}_{pin_name}_RAW"] = {
+                "predefines": [
+                    f"assign {pin_varname_org} = {pin_varname};",
+                ],
+            }
+            pin_varname = f"{pin_varname_org}_RAW"
         return pin_varname
 
     def gateware_instances_base(self, direct=False):
@@ -328,17 +361,15 @@ class PluginBase:
         instance = {"module": self.NAME, "direct": direct, "parameter": {}, "arguments": {}, "predefines": []}
         instance_predefines = instance["predefines"]
         instance_arguments = instance["arguments"]
+        pin_varname = None
 
         if direct is False:
             instance_arguments["clk"] = "sysclk"
         for pin_name, pin_config in self.pins().items():
             pin_varname = pin_config["varname"]
             if "pin" in pin_config:
-
                 pin_varname = self.gateware_pin_modifiers(instances, instance, pin_name, pin_config, pin_varname)
-
                 instance_arguments[pin_name] = pin_varname
-
             elif pin_config["direction"] == "input":
                 instance_arguments[pin_name] = pin_config.get("default", "1'd0")
             else:
@@ -359,13 +390,12 @@ class PluginBase:
             instance_arguments["rx_data"] = "rx_data"
             instance_arguments["tx_data"] = "tx_data"
             instance_arguments["sync"] = "INTERFACE_SYNC"
-            instance_arguments["pkg_timeout"] = "INTERFACE_TIMEOUT"
 
         elif self.TYPE == "expansion":
             instance_arguments["data_in"] = f"{self.expansion_prefix}_INPUT"
             instance_arguments["data_out"] = f"{self.expansion_prefix}_OUTPUT"
 
-        elif direct is True:
+        elif direct is True and pin_varname is not None:
             for interface_name, interface_setup in self.interface_data().items():
                 if interface_setup["direction"] in {"output", "inout"}:
                     instance_predefines.append(f"assign {pin_varname} = {interface_setup['variable']};")
@@ -379,8 +409,8 @@ class PluginBase:
         instances = self.gateware_instances_base()
         return instances
 
-    def option_default(self, name):
-        return self.OPTIONS.get(name, {}).get("default")
+    def option_default(self, name, default=None):
+        return self.OPTIONS.get(name, {}).get("default", default)
 
     def basic_config(self):
         basic_config = {
@@ -404,11 +434,11 @@ class PluginBase:
 
         for option_name, option_setup in self.OPTIONS.items():
             default = ""
-            if option_setup["type"] == int:
+            if option_setup["type"] is int:
                 default = 0
-            elif option_setup["type"] == float:
+            elif option_setup["type"] is float:
                 default = 0.0
-            elif option_setup["type"] == bool:
+            elif option_setup["type"] is bool:
                 default = False
             full_config[option_name] = option_setup.get("default", default)
 
@@ -461,9 +491,10 @@ class PluginBase:
         output = []
         for pin_name, pin_setup in self.PINDEFAULTS.items():
             direction = pin_setup.get("direction")
-            pullup = pin_setup.get("pullup", False)
+            pull = pin_setup.get("pull")
             description = pin_setup.get("description")
             default = pin_setup.get("default")
+            optional = pin_setup.get("optional")
 
             output.append(f"### {pin_name}:")
             if description:
@@ -471,9 +502,12 @@ class PluginBase:
             output.append("")
 
             output.append(f" * direction: {direction}")
-            output.append(f" * pullup: {pullup}")
+            if pull is not None:
+                output.append(f" * pull: {pull}")
             if default is not None:
                 output.append(f" * default: {default}")
+            if optional is not None:
+                output.append(f" * optional: {optional}")
 
             output.append("")
         return "\n".join(output)
@@ -518,20 +552,24 @@ class PluginBase:
                 description = signal_setup.get("description")
                 vmin = signal_setup.get("min")
                 vmax = signal_setup.get("max")
+                unit = signal_setup.get("unit")
                 output.append(f"### {signal_name}:")
                 if description:
                     output.append(description)
                 output.append("")
 
                 if isbool:
-                    output.append(f" * type: bit")
+                    output.append(" * type: bit")
                 else:
-                    output.append(f" * type: float")
+                    output.append(" * type: float")
                 output.append(f" * direction: {direction}")
                 if vmin is not None:
                     output.append(f" * min: {vmin}")
                 if vmax is not None:
                     output.append(f" * max: {vmax}")
+
+                if unit is not None:
+                    output.append(f" * unit: {unit}")
 
                 output.append("")
 
@@ -543,6 +581,7 @@ class PluginBase:
             size = interface_setup.get("size")
             direction = interface_setup.get("direction")
             description = interface_setup.get("description")
+            multiplexed = interface_setup.get("multiplexed")
 
             output.append(f"### {interface_name}:")
             if description:
@@ -551,6 +590,8 @@ class PluginBase:
 
             output.append(f" * size: {size} bit")
             output.append(f" * direction: {direction}")
+            if multiplexed:
+                output.append(f" * multiplexed: {multiplexed}")
 
             output.append("")
         return "\n".join(output)

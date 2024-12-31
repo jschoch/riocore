@@ -1,7 +1,12 @@
 # pwmin
+**pwm input**
+
+measuring pulse len
+
+Keywords: pulse digital
 
 
-pwm input
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,13 +21,14 @@ pwm input
 ```
 
 ## Pins:
+*FPGA-pins*
 ### pwm:
 
  * direction: input
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### freq_min:
 minimum measured frequency (for faster updates)
 
@@ -36,20 +42,16 @@ minimum measured frequency (for faster updates)
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### width:
 
  * type: float
  * direction: input
+ * unit: ms
 
 ### valid:
 
@@ -58,6 +60,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### width:
 
  * size: 32 bit
@@ -75,7 +78,6 @@ target net in LinuxCNC
     "type": "pwmin",
     "freq_min": 10,
     "name": "",
-    "net": "",
     "pins": {
         "pwm": {
             "pin": "0",
@@ -112,4 +114,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * pwmin.v
+ * [pwmin.v](pwmin.v)

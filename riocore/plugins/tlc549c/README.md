@@ -1,7 +1,12 @@
 # tlc549c
+**spi adc input**
+
+Analog input via tlc549 ADC
+
+Keywords: analog adc
 
 
-spi adc input
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -22,45 +27,41 @@ spi adc input
 ```
 
 ## Pins:
+*FPGA-pins*
 ### miso:
 
  * direction: input
- * pullup: False
 
 ### sclk:
 
  * direction: output
- * pullup: False
 
 ### sel:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### value:
 measured voltage
 
  * type: float
  * direction: input
+ * unit: Volt
 
 
 ## Interfaces:
+*transport layer*
 ### value:
 
  * size: 8 bit
@@ -72,7 +73,6 @@ measured voltage
 {
     "type": "tlc549c",
     "name": "",
-    "net": "",
     "pins": {
         "miso": {
             "pin": "0",
@@ -116,4 +116,4 @@ measured voltage
 ```
 
 ## Verilogs:
- * tlc549c.v
+ * [tlc549c.v](tlc549c.v)

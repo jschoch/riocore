@@ -1,7 +1,12 @@
 # uart
+**uart interface for host cominucation**
+
+simple uart interface, not usable for realtime stuff in LinuxCNC / only for testing
+
+Keywords: serial uart interface
 
 
-uart interface for host cominucation
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -19,18 +24,18 @@ uart interface for host cominucation
 ```
 
 ## Pins:
+*FPGA-pins*
 ### rx:
 
  * direction: input
- * pullup: False
 
 ### tx:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### baud:
 serial baud rate
 
@@ -44,13 +49,15 @@ serial baud rate
 name of this plugin instance
 
  * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 
 
 ## Interfaces:
+*transport layer*
 
 
 ## Full-Example:
@@ -82,7 +89,7 @@ name of this plugin instance
 ```
 
 ## Verilogs:
- * uart.v
- * uart_baud.v
- * uart_rx.v
- * uart_tx.v
+ * [uart.v](uart.v)
+ * [uart_baud.v](uart_baud.v)
+ * [uart_rx.v](uart_rx.v)
+ * [uart_tx.v](uart_tx.v)

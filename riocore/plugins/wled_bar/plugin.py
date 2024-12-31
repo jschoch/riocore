@@ -4,12 +4,16 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "wled_bar"
+        self.INFO = "ws2812b interface for bar-displays"
+        self.DESCRIPTION = "simple ws2812b driver with variable input to build led-bars"
+        self.KEYWORDS = "led rgb status info"
+        self.ORIGIN = "https://github.com/mattvenn/ws2812-core"
         self.VERILOGS = ["ws2812.v", "wled_bar.v"]
         self.PINDEFAULTS = {
             "data": {
                 "direction": "output",
                 "invert": False,
-                "pullup": False,
+                "pull": None,
             },
         }
         self.OPTIONS = {
@@ -39,13 +43,11 @@ class Plugin(PluginBase):
                 "direction": "output",
             },
         }
-        self.INFO = "ws2812b interface for bar-displays"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
+        instance["predefines"]
         instance_parameter = instance["parameter"]
         num_leds = self.plugin_setup.get("leds", 12)
         level = self.plugin_setup.get("level", 127)

@@ -1,7 +1,12 @@
 # bitin
+**single input pin**
+
+to read switches or other 1bit signals
+
+Keywords: switch limit estop keyboard
 
 
-single input pin
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -16,27 +21,23 @@ single input pin
 ```
 
 ## Pins:
+*FPGA-pins*
 ### bit:
 
  * direction: input
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### name:
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### bit:
 
  * type: bit
@@ -44,6 +45,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### bit:
 
  * size: 1 bit
@@ -55,7 +57,6 @@ target net in LinuxCNC
 {
     "type": "bitin",
     "name": "",
-    "net": "",
     "pins": {
         "bit": {
             "pin": "0",

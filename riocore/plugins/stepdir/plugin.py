@@ -4,8 +4,12 @@ from riocore.plugins import PluginBase
 class Plugin(PluginBase):
     def setup(self):
         self.NAME = "stepdir"
-        self.TYPE = "joint"
+        self.INFO = "step/dir output for stepper drivers"
+        self.DESCRIPTION = "to control motor drivers via step/dir pin's and an optional enable pin"
+        self.KEYWORDS = "stepper servo joint"
+        self.ORIGIN = ""
         self.VERILOGS = ["stepdir.v"]
+        self.TYPE = "joint"
         self.PINDEFAULTS = {
             "step": {
                 "direction": "output",
@@ -36,8 +40,8 @@ class Plugin(PluginBase):
         self.SIGNALS = {
             "velocity": {
                 "direction": "output",
-                "min": -1000000,
-                "max": 1000000,
+                "min": -100000,
+                "max": 100000,
                 "unit": "Hz",
                 "absolute": False,
                 "description": "speed in steps per second",
@@ -53,15 +57,13 @@ class Plugin(PluginBase):
                 "bool": True,
             },
         }
-        self.INFO = "step/dir output for stepper drivers"
-        self.DESCRIPTION = ""
 
     def gateware_instances(self):
         instances = self.gateware_instances_base()
         instance = instances[self.instances_name]
-        instance_predefines = instance["predefines"]
-        instance_parameter = instance["parameter"]
-        instance_arguments = instance["arguments"]
+        instance["predefines"]
+        instance["parameter"]
+        instance["arguments"]
         return instances
 
     def convert(self, signal_name, signal_setup, value):

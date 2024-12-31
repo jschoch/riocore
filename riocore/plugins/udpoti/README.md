@@ -1,7 +1,12 @@
 # udpoti
+**digital-poti with up/down+dir interface**
+
+controling digital poti for analog outputs
+
+Keywords: analog dac poti
 
 
-digital-poti with up/down+dir interface
+![image.png](image.png)
 
 ## Basic-Example:
 ```
@@ -19,18 +24,18 @@ digital-poti with up/down+dir interface
 ```
 
 ## Pins:
+*FPGA-pins*
 ### updown:
 
  * direction: output
- * pullup: False
 
 ### increment:
 
  * direction: output
- * pullup: False
 
 
 ## Options:
+*user-options*
 ### resolution:
 number of steps from min to maximum value
 
@@ -52,16 +57,11 @@ interface frequency
 name of this plugin instance
 
  * type: str
- * default: None
-
-### net:
-target net in LinuxCNC
-
- * type: str
- * default: None
+ * default: 
 
 
 ## Signals:
+*signals/pins in LinuxCNC*
 ### value:
 
  * type: float
@@ -69,6 +69,7 @@ target net in LinuxCNC
 
 
 ## Interfaces:
+*transport layer*
 ### value:
 
  * size: 32 bit
@@ -82,7 +83,6 @@ target net in LinuxCNC
     "resolution": 100,
     "frequency": 100,
     "name": "",
-    "net": "",
     "pins": {
         "updown": {
             "pin": "0",
@@ -118,4 +118,4 @@ target net in LinuxCNC
 ```
 
 ## Verilogs:
- * udpoti.v
+ * [udpoti.v](udpoti.v)
