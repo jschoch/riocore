@@ -1,5 +1,5 @@
 
-module quadencoderz
+module quadencoderz2
     #(
          parameter BITS = 32,
          parameter QUAD_TYPE = 0

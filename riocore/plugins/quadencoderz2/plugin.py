@@ -3,14 +3,14 @@ from riocore.plugins import PluginBase
 
 class Plugin(PluginBase):
     def setup(self):
-        self.NAME = "quadencoderz"
+        self.NAME = "quadencoderz2"
         self.INFO = "quadencoder with index pin"
         self.DESCRIPTION = (
             "usable as spindle-encoder for rigid tapping and thread cutting.  It is critical that your position-scale and QUAD_TYPE match, see the details in the description for QUAD_TYPE"
         )
         self.KEYWORDS = "feedback encoder rotary linear glassscale  index"
         self.ORIGIN = "https://www.fpga4fun.com/QuadratureDecoder.html"
-        self.VERILOGS = ["quadencoderz.v"]
+        self.VERILOGS = ["quadencoderz2.v"]
         self.PINDEFAULTS = {
             "a": {
                 "direction": "input",
@@ -68,7 +68,6 @@ class Plugin(PluginBase):
     if(value_rps < .016){
         value_rps = 0.0;
         }
-    *data->SIGIN_QUADENCODERZ0_RPS = value_rps;
 """
         self.SIGNALS = {
             "indexenable": {
